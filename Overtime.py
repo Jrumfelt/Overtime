@@ -3,7 +3,7 @@ File: Overtime.py
 Author: Joseph Rumfelt
 Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
-Purpose: Give a rank for the overtime priority at Schenectady Police Department
+Purpose: Determine Overtime position priority for Schenectady PD
 """
 from csv import *
 import PySimpleGUI as sg
