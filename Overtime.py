@@ -28,18 +28,50 @@ def viewall():
         read = reader(f_object)
         for line in read:
             dicttemp = {
+                        "id" : line[0],
                         "first" : line[1], 
                         "second" : line[2],
-                        "position" : line[3],
+                        "job" : line[3],
                         "totalovertime" : line[4],
                         "8hours" : line[5],
                         "4hours" : line[6],
                         "overtimerank" : line[7],
                         "previousposition": line[8]
                         }
-            print(dicttemp)
             dictall[line[0]] = dicttemp
-    return dictall    
+        f_object.close()
+    return dictall
+
+#Takes a list of employee IDs and calculates their overtime priority rank based on who is higher in Names.csv and job position.
+#Returns a ***LIST/DICTIONARY*** with the employee information and rank
+def rank(ids):
+    tempposition = 0
+    fieldofficers = {}
+    detectives = {}
+    dictall = viewall()
+    for key, value in dictall.items():
+        tempposition += 1
+        if key in ids:
+            value["previousposition"] = tempposition
+            if value["job"] == "FieldOfficer":
+                fieldofficers[key] = value
+            elif value["job"] == "Detective":
+                detectives[key] = value
+            else:
+                print("ERROR: Job Position Not Recognized For:" + value["first"] + " " + value["second"] + " " + value["id"])
+    rank = 0
+    rankedlst = []
+    for key, value in fieldofficers.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(fieldofficers[key])
+    for key, value in detectives.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(detectives[key])
+    return rankedlst
+    
+     
 
 #Home tab of application that shows buttons to switch to other tabs as well as the list of employees
 class TabHome(wx.Panel):
@@ -51,7 +83,8 @@ class TabHome(wx.Panel):
 class TabNewEmployee(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, "Add New Employee", (20,20))
+        t = wx.StaticText(self, -1, "New Employee", (20,20))
+        
         
 #Mainframe
 class MainFrame(wx.Frame):
@@ -79,34 +112,11 @@ class MainFrame(wx.Frame):
 """
 Initialize gui application
 """
-def main():
-    sg.theme('Dark2')
-    
-   #layout for new employees
-    layout_newemployee = [[sg.Text("Add new employees")],
-                [sg.Text("Employee first and last name"), sg.InputText()],
-                [sg.Text("Employee number"), sg.InputText()],
-                [sg.Text("Employee job position"), sg.InputText()],
-                [sg.Button("Submit"), sg.Button("Cancel")]]
-    #Create new employee window and run event loop
-    window = sg.Window('New Employee', layout_newemployee)
-    while True:
-        event, values = window.read()
-        if event == sg.WIN_CLOSED or event == "Cancel":
-            break
-        elif event == "Submit":
-            name = values[0]
-            id = values[1]
-            position = values[2]
-            newemployee(name, id, position)
-            break
-    window.close()
-    
+def main():  
     #init wx app
     app = wx.App()
     MainFrame().Show()
     app.MainLoop()
-    
     
 if __name__ == "__main__":
     main()
