@@ -6,8 +6,8 @@ Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
 from csv import *
-import PySimpleGUI as sg
 import wx
+import pandas as pd
 
 fname = "Names.csv"
 
@@ -71,7 +71,22 @@ def rank(ids):
         rankedlst.append(detectives[key])
     return rankedlst
     
-     
+#Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
+def changehours(id, eighthour, fourhour):
+    r = reader(open(fname))
+    lines = list(r)
+    for line in lines:
+        if line[0] == id:
+            line[5] = eighthour
+            line[6] = fourhour
+            break
+    print(lines)
+    #TODO: Add writer that doesnt delete everything
+    
+#Shift row to bottom of csv to reset their rank priority     
+def shiftlast(id):
+    #TODO: Everything here
+    return None
 
 #Home tab of application that shows buttons to switch to other tabs as well as the list of employees
 class TabHome(wx.Panel):
