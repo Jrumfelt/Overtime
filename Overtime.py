@@ -7,7 +7,8 @@ Purpose: Determine Overtime position priority for Schenectady PD
 """
 from csv import *
 import wx
-import pandas as pd
+import shutil
+from tempfile import NamedTemporaryFile
 
 fname = "Names.csv"
 
@@ -46,42 +47,96 @@ def viewall():
 #Returns a ***LIST/DICTIONARY*** with the employee information and rank
 def rank(ids):
     tempposition = 0
-    fieldofficers = {}
-    detectives = {}
+    fsbptl = {}
+    fsbsgt = {}
+    fsblt = {}
+    isbdet = {}
+    isbsgt = {}
+    isblt = {}
+    asbptl = {}
+    asbsgt = {}
+    asblt = {}
     dictall = viewall()
     for key, value in dictall.items():
         tempposition += 1
         if key in ids:
             value["previousposition"] = tempposition
-            if value["job"] == "FieldOfficer":
-                fieldofficers[key] = value
-            elif value["job"] == "Detective":
-                detectives[key] = value
+            if value["job"] == "FSB PTL":
+                fsbptl[key] = value
+            elif value["job"] == "ISB DET":
+                isbdet[key] = value
+            elif value["job"] == "ASB PTL":
+                asbptl[key] = value
+            elif value["job"] == "FSB SGT":
+                fsbsgt[key] = value
+            elif value["job"] == "ISB SGT":
+                isbsgt[key] = value
+            elif value["job"] == "ASB SGT":
+                asbsgt[key] = value
+            elif value["job"] == "FSB LT":
+                fsblt[key] = value
+            elif value["job"] == "ISB LT":
+                isblt[key] = value
+            elif value["job"] == "ASB LT":
+                asblt[key] = value
             else:
                 print("ERROR: Job Position Not Recognized For:" + value["first"] + " " + value["second"] + " " + value["id"])
     rank = 0
     rankedlst = []
-    for key, value in fieldofficers.items():
+    for key, value in fsbptl.items():
         rank += 1
         value["overtimerank"] = rank
-        rankedlst.append(fieldofficers[key])
-    for key, value in detectives.items():
+        rankedlst.append(fsbptl[key])
+    for key, value in isbdet.items():
         rank += 1
         value["overtimerank"] = rank
-        rankedlst.append(detectives[key])
+        rankedlst.append(isbdet[key])
+    for key, value in asbptl.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(asbptl[key])
+    for key, value in fsbsgt.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(fsbsgt[key])
+    for key, value in isbsgt.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(isbsgt[key])
+    for key, value in asbsgt.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(asbsgt[key])
+    for key, value in fsblt.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(fsblt[key])
+    for key, value in isblt.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(isblt[key])
+    for key, value in asblt.items():
+        rank += 1
+        value["overtimerank"] = rank
+        rankedlst.append(asblt[key])
     return rankedlst
     
 #Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
 def changehours(id, eighthour, fourhour):
-    r = reader(open(fname))
-    lines = list(r)
-    for line in lines:
-        if line[0] == id:
-            line[5] = eighthour
-            line[6] = fourhour
-            break
-    print(lines)
-    #TODO: Add writer that doesnt delete everything
+    tempfile = NamedTemporaryFile(mode="w", delete=False, newline = "")
+    fields = ["id", "first", "second", "job", "totalovertime", "8hours", "4hours", "overtimerank", "previousposition"]
+    with open (fname, "r") as csvfile, tempfile:
+        reader = DictReader(csvfile, fieldnames=fields)
+        writer = DictWriter(tempfile, fieldnames=fields)
+        for row in reader:
+            if row["id"] == id:
+                print("Updating row", row["id"])
+                row["8hours"], row["4hours"] = eighthour, fourhour
+            row = {"id": row["id"], "first" : row["first"], "second" : row["second"], "job" : row["job"], "totalovertime" : row["totalovertime"], 
+                                                  "8hours" : row["8hours"], "4hours" : row["4hours"], "overtimerank" : row["overtimerank"],
+                                                  "previousposition" : row["previousposition"]}
+            writer.writerow(row)
+    shutil.move(tempfile.name, fname)
     
 #Shift row to bottom of csv to reset their rank priority     
 def shiftlast(id):
