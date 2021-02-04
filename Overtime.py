@@ -156,8 +156,22 @@ def changeprevposition(id, prevpos):
 
 #Shift row to bottom of csv to reset their rank priority     
 def shiftlast(id):
-    #TODO: Everything here
-    return None
+    tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
+    lastrow = {}
+    with open(fname, "r") as csvfile, tempfile:
+        reader = DictReader(csvfile, fieldnames=fields)
+        writer = DictWriter(tempfile, fieldnames=fields)
+        for row in reader:
+            if row["id"] != id:
+                row = {"id": row["id"], "first" : row["first"], "second" : row["second"], "job" : row["job"], "totalovertime" : row["totalovertime"], 
+                                                  "8hours" : row["8hours"], "4hours" : row["4hours"], "overtimerank" : row["overtimerank"],
+                                                  "previousposition" : row["previousposition"]} 
+                writer.writerow(row)
+            else:
+                lastrow = row
+        if bool(lastrow) == True:
+            writer.writerow(lastrow)
+    shutil.move(tempfile.name, fname)       
 
 #Home tab of application that shows buttons to switch to other tabs as well as the list of employees
 class TabHome(wx.Panel):
@@ -205,4 +219,4 @@ def main():
     app.MainLoop()
     
 if __name__ == "__main__":
-    changeprevposition("9039", "3")
+    main()
