@@ -11,7 +11,7 @@ import shutil
 from tempfile import NamedTemporaryFile
 
 fname = "Names.csv"
-
+fields = ["id", "first", "second", "job", "totalovertime", "8hours", "4hours", "overtimerank", "previousposition"]
 
 #Opens csv file in append mode and adds a new employee using file and writer object
 def newemployee(first, last, id, position):
@@ -44,9 +44,10 @@ def viewall():
     return dictall
 
 #Takes a list of employee IDs and calculates their overtime priority rank based on who is higher in Names.csv and job position.
-#Returns a ***LIST/DICTIONARY*** with the employee information and rank
+#Returns a dictionary with the employee information and rank
 def rank(ids):
     tempposition = 0
+    #dictionaries of all the positions
     fsbptl = {}
     fsbsgt = {}
     fsblt = {}
@@ -57,6 +58,7 @@ def rank(ids):
     asbsgt = {}
     asblt = {}
     dictall = viewall()
+    #Place in the correct dictionary if it is one of the given ids
     for key, value in dictall.items():
         tempposition += 1
         if key in ids:
@@ -83,6 +85,7 @@ def rank(ids):
                 print("ERROR: Job Position Not Recognized For:" + value["first"] + " " + value["second"] + " " + value["id"])
     rank = 0
     rankedlst = []
+    #Assign rank based on the priority
     for key, value in fsbptl.items():
         rank += 1
         value["overtimerank"] = rank
@@ -124,13 +127,11 @@ def rank(ids):
 #Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
 def changehours(id, eighthour, fourhour):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline = "")
-    fields = ["id", "first", "second", "job", "totalovertime", "8hours", "4hours", "overtimerank", "previousposition"]
     with open (fname, "r") as csvfile, tempfile:
         reader = DictReader(csvfile, fieldnames=fields)
         writer = DictWriter(tempfile, fieldnames=fields)
         for row in reader:
             if row["id"] == id:
-                print("Updating row", row["id"])
                 row["8hours"], row["4hours"] = eighthour, fourhour
             row = {"id": row["id"], "first" : row["first"], "second" : row["second"], "job" : row["job"], "totalovertime" : row["totalovertime"], 
                                                   "8hours" : row["8hours"], "4hours" : row["4hours"], "overtimerank" : row["overtimerank"],
@@ -138,6 +139,21 @@ def changehours(id, eighthour, fourhour):
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
     
+#Change the previous position for a given employee id
+def changeprevposition(id, prevpos):
+    tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
+    with open(fname, "r") as csvfile, tempfile:
+        reader = DictReader(csvfile, fieldnames=fields)
+        writer = DictWriter(tempfile, fieldnames=fields)
+        for row in reader:
+            if row["id"] == id:
+                row["previousposition"] = prevpos
+            row = {"id": row["id"], "first" : row["first"], "second" : row["second"], "job" : row["job"], "totalovertime" : row["totalovertime"], 
+                                                  "8hours" : row["8hours"], "4hours" : row["4hours"], "overtimerank" : row["overtimerank"],
+                                                  "previousposition" : row["previousposition"]}                
+            writer.writerow(row)
+    shutil.move(tempfile.name, fname)
+
 #Shift row to bottom of csv to reset their rank priority     
 def shiftlast(id):
     #TODO: Everything here
@@ -189,4 +205,4 @@ def main():
     app.MainLoop()
     
 if __name__ == "__main__":
-    main()
+    changeprevposition("9039", "3")
