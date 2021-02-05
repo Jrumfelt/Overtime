@@ -9,14 +9,13 @@ from csv import *
 import wx
 import shutil
 from tempfile import NamedTemporaryFile
-import datetime
 
 fname = "Names.csv"
-fields = ["id", "name", "job", "totalovertime", "8hours", "4hours", "overtimerank", "previousposition", "date"]
+fields = ["id", "name", "job", "8hours", "4hours", "overtimerank", "previousposition"]
 
 #Opens csv file in append mode and adds a new employee using file and writer object
 def newemployee(name, id, position):
-    toAppend = [id, name, position, "", "", "", "", ""]
+    toAppend = [id, name, position, "", "", "", ""]
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
         csv_writer.writerow(toAppend)
@@ -36,12 +35,10 @@ def viewall():
                         "id" : line[0],
                         "name" : line[1], 
                         "job" : line[2],
-                        "totalovertime" : line[3],
-                        "8hours" : line[4],
-                        "4hours" : line[5],
-                        "overtimerank" : line[6],
-                        "previousposition": line[7],
-                        "date" : line[8]
+                        "8hours" : line[3],
+                        "4hours" : line[4],
+                        "overtimerank" : line[5],
+                        "previousposition": line[6],
                         }
             dictall[line[0]] = dicttemp
         f_object.close()
@@ -139,18 +136,6 @@ def changehours(id, eighthour, fourhour):
                 row["8hours"], row["4hours"] = eighthour, fourhour
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
-    
-#Change the previous position for a given employee id
-def changeprevposition(id, prevpos):
-    tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
-    with open(fname, "r") as csvfile, tempfile:
-        reader = DictReader(csvfile, fieldnames=fields)
-        writer = DictWriter(tempfile, fieldnames=fields)
-        for row in reader:
-            if row["id"] == id:
-                row["previousposition"] = prevpos               
-            writer.writerow(row)
-    shutil.move(tempfile.name, fname)
 
 #Shift row to bottom of csv to reset their rank priority     
 def shiftlast(id):
@@ -233,7 +218,6 @@ class MainFrame(wx.Frame):
         # Create the tab windows
         tabhome = TabHome(nb)
         tabnewemp = TabNewEmployee(nb)
-
 
         # Add the windows to tabs and name them.
         nb.AddPage(tabhome, "Home")
