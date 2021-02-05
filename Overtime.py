@@ -9,13 +9,14 @@ from csv import *
 import wx
 import shutil
 from tempfile import NamedTemporaryFile
+import datetime
 
 fname = "Names.csv"
-fields = ["id", "first", "second", "job", "totalovertime", "8hours", "4hours", "overtimerank", "previousposition"]
+fields = ["id", "name", "job", "totalovertime", "8hours", "4hours", "overtimerank", "previousposition", "date"]
 
 #Opens csv file in append mode and adds a new employee using file and writer object
-def newemployee(first, last, id, position):
-    toAppend = [id, first, last, position, "", "", "", "", ""]
+def newemployee(name, id, position):
+    toAppend = [id, name, position, "", "", "", "", ""]
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
         csv_writer.writerow(toAppend)
@@ -28,16 +29,19 @@ def viewall():
     with open(fname, "r") as f_object:
         read = reader(f_object)
         for line in read:
+            if line == []:
+                print("ERROR: Empty Line in Names.csv")
+                break
             dicttemp = {
                         "id" : line[0],
-                        "first" : line[1], 
-                        "second" : line[2],
-                        "job" : line[3],
-                        "totalovertime" : line[4],
-                        "8hours" : line[5],
-                        "4hours" : line[6],
-                        "overtimerank" : line[7],
-                        "previousposition": line[8]
+                        "name" : line[1], 
+                        "job" : line[2],
+                        "totalovertime" : line[3],
+                        "8hours" : line[4],
+                        "4hours" : line[5],
+                        "overtimerank" : line[6],
+                        "previousposition": line[7],
+                        "date" : line[8]
                         }
             dictall[line[0]] = dicttemp
         f_object.close()
@@ -165,15 +169,45 @@ def shiftlast(id):
     shutil.move(tempfile.name, fname)       
 
 #Move row to its previous position in the csv file
-def shiftprevious(id):
+def shiftprevious(prevrow):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
     count = 0
+    if prevrow["previousposition"] == "":
+        print("Error: Employee has not been assigned a previous position")
     with open(fname, "r") as csvfile, tempfile:
         reader = DictReader(csvfile, fieldnames=fields)
         writer = DictWriter(tempfile, fieldnames=fields)
         for row in reader:
-            print(row)
+            count += 1
+            if row["id"] != prevrow["id"]:
+                if count == int(prevrow["previousposition"]):
+                    writer.writerow(prevrow)
+                writer.writerow(row)
     shutil.move(tempfile.name, fname)
+
+#Confirm employee up for overtime
+def confirmovertime(id):
+    position = 0
+    tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
+    with open(fname, "r") as csvfile, tempfile:
+        reader = DictReader(csvfile, fieldnames=fields)
+        writer = DictWriter(tempfile, fieldnames=fields)
+        for row in reader:
+            position += 1
+            if row["id"] == id:
+                row["overtimerank"] = "" 
+                row["8hours"] = "" 
+                row["4hours"] = ""
+                row["previousposition"] = str(position)
+            writer.writerow(row)
+    shutil.move(tempfile.name, fname)
+    shiftlast(id)
+    
+#Cancel overtime for a employee who has been signed up    
+def cancelovertime(id):
+    dictall = viewall()
+    employee = dictall[id]
+    shiftprevious(employee)
 
 #Home tab of application that shows buttons to switch to other tabs as well as the list of employees
 class TabHome(wx.Panel):
@@ -186,8 +220,7 @@ class TabNewEmployee(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
         t = wx.StaticText(self, -1, "New Employee", (20,20))
-        
-        
+              
 #Mainframe
 class MainFrame(wx.Frame):
     def __init__(self):
@@ -211,9 +244,8 @@ class MainFrame(wx.Frame):
         sizer.Add(nb, 1, wx.EXPAND)
         p.SetSizer(sizer)    
     
-"""
-Initialize gui application
-"""
+
+#Initialize gui application
 def main():  
     #init wx app
     app = wx.App()
@@ -221,4 +253,5 @@ def main():
     app.MainLoop()
     
 if __name__ == "__main__":
-    shiftprevious("9983")
+    main()
+    
