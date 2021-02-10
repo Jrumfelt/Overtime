@@ -19,7 +19,7 @@ fields = ["id", "name", "job", "8hours", "4hours", "overtimerank", "previousposi
 """
 Opens csv file in append mode and adds a new employee using file and writer object
 """
-def newemployee(name, id, position):
+def newemployee(id, name, position):
     toAppend = [id, name, position, "", "", "", ""]
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
@@ -214,9 +214,13 @@ def cancelovertime(id):
     shiftprevious(employee)
 
 """
-GUI 
+GUI classes and methods
 """
-class MyTable(QTableWidget):
+
+"""
+Table of employees
+"""
+class EmployeeTable(QTableWidget):
     def __init__(self, r, c):
         super().__init__(r, c)
         self.check_change = True
@@ -249,7 +253,9 @@ class MyTable(QTableWidget):
                     item = QTableWidgetItem(stuff)
                     self.setItem(row, column, item)
         self.check_change = True           
-        
+"""
+First window with list of all employees and menu bar with buttons to calculate overtime rank, cancel overtime, add new employe, and quit application
+"""     
 class HomeWindow(QMainWindow):
     def __init__(self):
         super().__init__() 
@@ -280,7 +286,7 @@ class HomeWindow(QMainWindow):
         newemp_action.triggered.connect(self.newemp_triggered)
         
         #set up table
-        self.form_widget = MyTable(10, 10)
+        self.form_widget = EmployeeTable(10, 10)
         self.setCentralWidget(self.form_widget)
             
         headers = ["ID", "Name", "Position"]
@@ -289,21 +295,68 @@ class HomeWindow(QMainWindow):
         self.form_widget.open_sheet()
             
         #show window
-        self.show()          
-        
+        self.show()              
+    
+    #Methods for when you press menu button    
     def quit_trigger(self):
         qApp.quit()
     
     def rank_triggered(self):
-        print("rank")
+        print("Rank")
     
-    def cancel_triggered(self):
-        print("cancel")
     
-    def newemp_triggered(self):
-        print("new")
+    #Methods for getting employee information
+    def getUID(self):
+        uid, okPressed = QInputDialog.getText(self, "Get ID","Employee ID", QLineEdit.Normal, "")
+        if okPressed and uid != "":
+            return uid
+        return None
+
+    def getName(self):
+        name, okPressed = QInputDialog.getText(self, "Get Name", "Employee Name", QLineEdit.Normal, "")
+        if okPressed and name != "":
+            return name
+        else:
+            return None
         
+    def getPosition(self):
+        positions = ("FSB PTL", "FSB SGT", "FSB LT", "ISB PTL", "ISB SGT", "ISB LT", "ASB PTL", "ASB SGT", "ASB LT")
+        position, okPressed = QInputDialog.getItem(self, "Get Position", "Employee Position", positions, 0, False)
+        if okPressed and position:
+            return position
+        else:
+            return None
     
+    """
+    When cancel overtime button is clicked prompt the user to enter the id of the user to be remove
+    Prompt user to confirm and if confirmed prompt if the user would like to select a new user for overtime
+    """    
+    def cancel_triggered(self):
+            print("cancel")
+   
+    """
+    When new employee button is clicked prompt the user to enter the id, name, and position of employee
+    On user confirmation that the information is correct add to Names.csv using newemployee() function
+    """
+    def newemp_triggered(self):
+        uid = self.getUID()
+        if uid:
+            name = self.getName()
+            if name:
+                position = self.getPosition()
+                if position:
+                    #Create confirmation window
+                    msgBox = QMessageBox()
+                    msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
+                        "\nEmployee Name:    " + name + "\nEmployee Position:    " + position)
+                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                    msgBox.setWindowTitle("Confirmation")
+                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    
+                    confirm = msgBox.exec_()
+                    if confirm == QMessageBox.Ok:
+                        newemployee(uid, name, position)
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     home = HomeWindow()
