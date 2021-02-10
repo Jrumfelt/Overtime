@@ -236,7 +236,7 @@ class MyTable(QTableWidget):
     def open_sheet(self):
         self.check_change = False
         fname = "Names.csv"
-        with open(fname, "r" , newline='') as f_object:
+        with open(fname, "r" , newline="") as f_object:
             self.setRowCount(0)
             self.setColumnCount(3)
             my_file = reader(f_object)
@@ -256,10 +256,30 @@ class HomeWindow(QMainWindow):
             
         self.setWindowTitle("Overtime Priority")
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(800, 400)
+        self.resize(450, 400)
         
-
+        #create menu bar
+        bar = self.menuBar()
         
+        #Create actions for menu buttons
+        rank_action = QAction("Calculate Overtime", self)    
+        cancel_action = QAction("Cancel Overtime", self)
+        newemp_action = QAction("Add New Employee", self)
+        quit_action = QAction("Quit", self)
+        
+        #Add menu buttons to menu bar
+        bar.addAction(rank_action)
+        bar.addAction(cancel_action)
+        bar.addAction(newemp_action)
+        bar.addAction(quit_action)
+        
+        #Connect menu buttons to functions
+        quit_action.triggered.connect(self.quit_trigger)
+        rank_action.triggered.connect(self.rank_triggered)
+        cancel_action.triggered.connect(self.cancel_triggered)
+        newemp_action.triggered.connect(self.newemp_triggered)
+        
+        #set up table
         self.form_widget = MyTable(10, 10)
         self.setCentralWidget(self.form_widget)
             
@@ -268,7 +288,21 @@ class HomeWindow(QMainWindow):
             
         self.form_widget.open_sheet()
             
+        #show window
         self.show()          
+        
+    def quit_trigger(self):
+        qApp.quit()
+    
+    def rank_triggered(self):
+        print("rank")
+    
+    def cancel_triggered(self):
+        print("cancel")
+    
+    def newemp_triggered(self):
+        print("new")
+        
     
 if __name__ == "__main__":
     app = QApplication(sys.argv)
