@@ -332,7 +332,18 @@ class HomeWindow(QMainWindow):
     Prompt user to confirm and if confirmed prompt if the user would like to select a new user for overtime
     """    
     def cancel_triggered(self):
-            print("cancel")
+        uid = self.getuid()
+        if uid:
+            msgBox = QMessageBox()
+            msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid)
+            msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+            msgBox.setWindowTitle("Confirmation")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    
+            confirm = msgBox.exec_()
+            if confirm == QMessageBox.Ok:
+                cancelovertime(uid)
+                #TODO: ASK FOR NEW EMPLOYEE TO REPLACE THIS ONE
    
     """
     When new employee button is clicked prompt the user to enter the id, name, and position of employee
