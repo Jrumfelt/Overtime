@@ -4,27 +4,32 @@ Author: Joseph Rumfelt
 Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
-
-https://easyprogramming1990.blogspot.com/
 """
+import sys
 from csv import *
-import wx
+from PyQt5.QtWidgets import *
+from PyQt5 import QtGui
 import shutil
+from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
 
 fname = "Names.csv"
 fields = ["id", "name", "job", "8hours", "4hours", "overtimerank", "previousposition"]
 
-#Opens csv file in append mode and adds a new employee using file and writer object
+"""
+Opens csv file in append mode and adds a new employee using file and writer object
+"""
 def newemployee(name, id, position):
     toAppend = [id, name, position, "", "", "", ""]
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
         csv_writer.writerow(toAppend)
         f_object.close()
-        
-#Returns a dict of all employees with id as key and the values being a 
-#dictionary with first name, last name, total overtime, 8hours, 4hours, overtime rank, and previous position in file   
+
+"""        
+Returns a dict of all employees with id as key and the values being a 
+dictionary with first name, last name, total overtime, 8hours, 4hours, overtime rank, and previous position in file   
+"""
 def viewall():
     dictall = {}
     with open(fname, "r") as f_object:
@@ -46,8 +51,10 @@ def viewall():
         f_object.close()
     return dictall
 
-#Takes a list of employee IDs and calculates their overtime priority rank based on who is higher in Names.csv and job position.
-#Returns a dictionary with the employee information and rank
+"""
+Takes a list of employee IDs and calculates their overtime priority rank based on who is higher in Names.csv and job position.
+Returns a dictionary with the employee information and rank
+"""
 def rank(ids):
     tempposition = 0
     #dictionaries of all the positions
@@ -126,8 +133,10 @@ def rank(ids):
         value["overtimerank"] = rank
         rankedlst.append(asblt[key])
     return rankedlst
-    
-#Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
+
+"""    
+Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
+"""
 def changehours(id, eighthour, fourhour):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline = "")
     with open (fname, "r") as csvfile, tempfile:
@@ -139,7 +148,9 @@ def changehours(id, eighthour, fourhour):
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
 
-#Shift row to bottom of csv to reset their rank priority     
+"""
+Shift row to bottom of csv to reset their rank priority 
+"""    
 def shiftlast(id):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
     lastrow = {}
@@ -153,9 +164,11 @@ def shiftlast(id):
                 lastrow = row
         if bool(lastrow) == True:
             writer.writerow(lastrow)
-    shutil.move(tempfile.name, fname)       
-
-#Move row to its previous position in the csv file
+    shutil.move(tempfile.name, fname)  
+         
+"""
+Move row to its previous position in the csv file
+"""
 def shiftprevious(prevrow):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
     count = 0
@@ -171,8 +184,10 @@ def shiftprevious(prevrow):
                     writer.writerow(prevrow)
                 writer.writerow(row)
     shutil.move(tempfile.name, fname)
-
-#Confirm employee up for overtime
+    
+"""
+Confirm employee up for overtime
+"""
 def confirmovertime(id):
     position = 0
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
@@ -190,54 +205,73 @@ def confirmovertime(id):
     shutil.move(tempfile.name, fname)
     shiftlast(id)
     
-#Cancel overtime for a employee who has been signed up    
+"""    
+Cancel overtime for a employee who has been signed up    
+"""
 def cancelovertime(id):
     dictall = viewall()
     employee = dictall[id]
     shiftprevious(employee)
 
-#Home tab of application that shows buttons to switch to other tabs as well as the list of employees
-class TabHome(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, "Overtime Priority Ranking", (20,20))
-
-#Tab for adding new employees. Has field for name, number, and job position of new employee
-class TabNewEmployee(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, "New Employee", (20,20))
-              
-#Mainframe
-class MainFrame(wx.Frame):
-    def __init__(self):
-        wx.Frame.__init__(self, None, title="Overtime Priority")
-
-        # Create a panel and notebook (tabs holder)
-        p = wx.Panel(self)
-        nb = wx.Notebook(p)
-
-        # Create the tab windows
-        tabhome = TabHome(nb)
-        tabnewemp = TabNewEmployee(nb)
-
-        # Add the windows to tabs and name them.
-        nb.AddPage(tabhome, "Home")
-        nb.AddPage(tabnewemp, "New Employee")
-
-        # Set noteboook in a sizer to create the layout
-        sizer = wx.BoxSizer()
-        sizer.Add(nb, 1, wx.EXPAND)
-        p.SetSizer(sizer)    
+"""
+GUI 
+"""
+class MyTable(QTableWidget):
+    def __init__(self, r, c):
+        super().__init__(r, c)
+        self.check_change = True
+        self.init_ui()
+        
+    def init_ui(self):
+        self.cellChanged.connect(self.c_current)
+        self.show()
+        
+    def c_current(self):
+        if self.check_change:
+            row = self.currentRow()
+            col = self.currentColumn()
+            value = self.item(row, col)
+            value = value.text()
     
+    def open_sheet(self):
+        self.check_change = False
+        fname = "Names.csv"
+        with open(fname, "r" , newline='') as f_object:
+            self.setRowCount(0)
+            self.setColumnCount(3)
+            my_file = reader(f_object)
+            for row_data in my_file:
+                row = self.rowCount()
+                self.insertRow(row)
+                if len(row_data) > 10:
+                    self.setColumnCount(len(row_data))
+                for column, stuff in enumerate(row_data):
+                    item = QTableWidgetItem(stuff)
+                    self.setItem(row, column, item)
+        self.check_change = True           
+        
+class HomeWindow(QMainWindow):
+    def __init__(self):
+        super().__init__() 
+            
+        self.setWindowTitle("Overtime Priority")
+        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.resize(800, 400)
+        
 
-#Initialize gui application
-def main():  
-    #init wx app
-    app = wx.App()
-    MainFrame().Show()
-    app.MainLoop()
+        
+        self.form_widget = MyTable(10, 10)
+        self.setCentralWidget(self.form_widget)
+            
+        headers = ["ID", "Name", "Position"]
+        self.form_widget.setHorizontalHeaderLabels(headers)
+            
+        self.form_widget.open_sheet()
+            
+        self.show()          
     
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    home = HomeWindow()
+    sys.exit(app.exec_())
     
