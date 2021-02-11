@@ -536,6 +536,7 @@ class HomeWindow(QMainWindow):
                 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
     home = HomeWindow()
     signup = SignUp()
     sys.exit(app.exec_())
