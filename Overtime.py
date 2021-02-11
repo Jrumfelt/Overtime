@@ -8,6 +8,7 @@ Purpose: Determine Overtime position priority for Schenectady PD
 from os import close
 import sys
 from csv import *
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
 import shutil
@@ -296,12 +297,57 @@ class SignUp(QMainWindow):
         
         self.form_widget.read_list()
         
+    def getUID(self):
+        uid, okPressed = QInputDialog.getText(self, "Get ID","Employee ID", QLineEdit.Normal, "")
+        if okPressed and uid != "":
+            return uid
+        return None
+    
+    def getEightBlock(self):
+        eightblocks = ("0-8", "8-16", "16-24")
+        eightblock, okPressed = QInputDialog.getItem(self, "Get Eight Hour Block", "Eight Hour Block", eightblocks, 0, False)
+        if okPressed and eightblock:
+            return eightblock
+        return None           
+    
+    def getFourBlock(self):
+        fourblocks = ("None","0-4","4-8","8-12","12-4","16-20","20-24","0-8","8-16","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
+        fourblock, okPressed = QInputDialog.getItem(self, "Get Four Hour Block", "Four Hour Block", fourblocks, 0, False)
+        if okPressed and fourblock:
+            return fourblock
+        else:
+            return None
+
     #Methods for when you press menu button
     """
     Add user to list and update form_widget table
     """
     def add_triggered(self):
-        return False
+        uid = self.getUID()
+        dictall = viewall()
+        while uid not in dictall and uid:
+            errdlg = QErrorMessage()
+            errdlg.setWindowTitle("ERROR")
+            errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been added")
+            errdlg.exec_()
+            uid = self.getUID()
+        if uid:
+            eightblock = self.getEightBlock()
+            if eightblock:
+                fourblock = self.getFourBlock()
+                if fourblock:
+                    #Confirmation Window
+                    msgBox = QMessageBox()
+                    msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
+                        "\nEight Hour Block:    " + eightblock + "\nFour Hour Block:    " + fourblock)
+                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                    msgBox.setWindowTitle("Confirmation")
+                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    
+                    confirm = msgBox.exec_()
+                    if confirm == QMessageBox.Ok:
+                        unranked.append([uid, eightblock, fourblock])           
+        self.form_widget.read_list()
     
     """
     Calculate rank order with rank() and display new window where the user can assign employees to overtime
