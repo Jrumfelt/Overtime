@@ -5,8 +5,11 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
+from os import close
+import sys
 from csv import *
 from PyQt5.QtWidgets import *
+from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import shutil
 from PyQt5.QtCore import Qt
@@ -636,14 +639,9 @@ class HomeWindow(QMainWindow):
         self.form_widget.open_sheet()    
                 
 if __name__ == "__main__":
-    unranked = ["1","2","3","4"]
-    rank(unranked)
-    print(rankedlst)
-    """
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     home = HomeWindow()
     signup = SignUp()
     assign = AssignOvertime()
     sys.exit(app.exec_())
-    """
