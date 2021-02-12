@@ -5,15 +5,14 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
-from os import close
 import sys
 from csv import *
 from PyQt5.QtWidgets import *
-from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import shutil
 from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
+import atexit
 
 fname = "Names.csv"
 fields = ["id", "name", "job", "8hours", "4hours", "overtimerank", "previousposition"]
@@ -168,6 +167,21 @@ def changehours(id, eighthour, fourhour):
                 row["8hours"], row["4hours"] = eighthour, fourhour
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
+    
+"""
+Change the overtime rank and previous position for a given employee id in Names.csv
+"""
+def rankfile(id, rank, prev):
+    tempfile = NamedTemporaryFile(mode="w", delete=False, newline = "")
+    with open(fname, "r") as csvfile, tempfile:
+        reader = DictReader(csvfile, fieldnames=fields)
+        writer = DictWriter(tempfile, fieldnames=fields)
+        for row in reader:
+            if row["id"] == id:
+                row["rank"] = rank
+                row["previousposition"] = prev
+            writer.writerow(row)
+    shutil.move(tempfile.name, fname)
 
 """
 Shift row to bottom of csv to reset their rank priority 
@@ -237,6 +251,13 @@ def cancelovertime(id):
         return(shiftprevious(employee))
     else:
         return False
+    
+def exitapp():
+    for i in rankedlst:
+        id = i[0]
+        rank = i[5]
+        prev = i[6]
+        rankfile(id, rank, prev)
 
 """
 GUI classes and methods
@@ -269,13 +290,15 @@ class RankedTable(QTableWidget):
         rank(ids)
         self.check_change = False
         self.setRowCount(0)
-        self.setColumnCount(6)
+        self.setColumnCount(5)
         column = 0
-        rank()
         for row_data in rankedlst:
             row = self.rowCount()
             self.insertRow(row)
-            #finish this :\
+            for col_data in row_data:
+                item = QTableWidgetItem(col_data)
+                self.setItem(row, column, item)
+                column += 1
             column = 0
 
 """
@@ -356,7 +379,7 @@ class AssignOvertime(QMainWindow):
        
         self.setWindowTitle("Overtime Ranks") 
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(600, 400)
+        self.resize(550, 400)
        
         #Create menu bar
         assignbar = self.menuBar()
@@ -374,11 +397,11 @@ class AssignOvertime(QMainWindow):
         close_action.triggered.connect(self.close_triggered)
        
         #set up table
-        self.form_widget = RankedTable(6, 6)
+        self.form_widget = RankedTable(10, 10)
         self.setCentralWidget(self.form_widget)
         self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
        
-        headers = ["ID", "Name", "Position", "8 Hour", "4 Hour", "Rank"]
+        headers = ["ID", "Name", "Position", "8 Hour", "4 Hour"]
         self.form_widget.setHorizontalHeaderLabels(headers)
        
         self.form_widget.read_list()
@@ -442,7 +465,7 @@ class SignUp(QMainWindow):
         return None           
     
     def getFourBlock(self):
-        fourblocks = ("None","0-4","4-8","8-12","12-4","16-20","20-24","0-8","8-16","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
+        fourblocks = ("N/A","0-4","4-8","8-12","12-4","16-20","20-24","0-8","8-16","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
         fourblock, okPressed = QInputDialog.getItem(self, "Get Four Hour Block", "Four Hour Block", fourblocks, 0, False)
         if okPressed and fourblock:
             return fourblock
@@ -644,4 +667,6 @@ if __name__ == "__main__":
     home = HomeWindow()
     signup = SignUp()
     assign = AssignOvertime()
+    atexit.register(exitapp())
     sys.exit(app.exec_())
+    
