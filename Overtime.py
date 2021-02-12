@@ -5,10 +5,7 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
-from os import close
-import sys
 from csv import *
-from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
 import shutil
@@ -18,6 +15,7 @@ from tempfile import NamedTemporaryFile
 fname = "Names.csv"
 fields = ["id", "name", "job", "8hours", "4hours", "overtimerank", "previousposition"]
 unranked = []
+rankedlst = []
 
 """
 Opens csv file in append mode and adds a new employee using file and writer object
@@ -56,86 +54,103 @@ def viewall():
 
 """
 Takes a list of employee IDs and calculates their overtime priority rank based on who is higher in Names.csv and job position.
-Returns a dictionary with the employee information and rank
+Appends rankedlst
 """
 def rank(ids):
     tempposition = 0
     #dictionaries of all the positions
-    fsbptl = {}
-    fsbsgt = {}
-    fsblt = {}
-    isbdet = {}
-    isbsgt = {}
-    isblt = {}
-    asbptl = {}
-    asbsgt = {}
-    asblt = {}
+    fsbptl = []
+    fsbsgt = []
+    fsblt = []
+    isbdet = []
+    isbsgt = []
+    isblt = []
+    asbptl = []
+    asbsgt = []
+    asblt = []
     dictall = viewall()
     #Place in the correct dictionary if it is one of the given ids
     for key, value in dictall.items():
         tempposition += 1
         if key in ids:
+            templst = []
             value["previousposition"] = tempposition
             if value["job"] == "FSB PTL":
-                fsbptl[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                fsbptl.append(templst)
             elif value["job"] == "ISB DET":
-                isbdet[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                isbdet.append(templst)
             elif value["job"] == "ASB PTL":
-                asbptl[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                asbptl.append(templst)
             elif value["job"] == "FSB SGT":
-                fsbsgt[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                fsbsgt.append(templst)
             elif value["job"] == "ISB SGT":
-                isbsgt[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                isbsgt.append(templst)
             elif value["job"] == "ASB SGT":
-                asbsgt[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                asbsgt.append(templst)
             elif value["job"] == "FSB LT":
-                fsblt[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                fsblt.append(templst)
             elif value["job"] == "ISB LT":
-                isblt[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                isblt.append(templst)
             elif value["job"] == "ASB LT":
-                asblt[key] = value
+                for v2 in value.values():
+                    templst.append(v2)
+                asblt.append(templst)
             else:
                 print("ERROR: Job Position Not Recognized For:" + value["first"] + " " + value["second"] + " " + value["id"])
     rank = 0
-    rankedlst = []
     #Assign rank based on the priority
-    for key, value in fsbptl.items():
+    for i in fsbptl:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(fsbptl[key])
-    for key, value in isbdet.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in isbdet:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(isbdet[key])
-    for key, value in asbptl.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in asbptl:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(asbptl[key])
-    for key, value in fsbsgt.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in fsbsgt:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(fsbsgt[key])
-    for key, value in isbsgt.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in isbsgt:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(isbsgt[key])
-    for key, value in asbsgt.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in asbsgt:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(asbsgt[key])
-    for key, value in fsblt.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in fsblt:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(fsblt[key])
-    for key, value in isblt.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in isblt:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(isblt[key])
-    for key, value in asblt.items():
+        i[5] = rank
+        rankedlst.append(i)
+    for i in asblt:
         rank += 1
-        value["overtimerank"] = rank
-        rankedlst.append(asblt[key])
-    return rankedlst
+        i[5] = rank
+        rankedlst.append(i)
 
 """    
 Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
@@ -225,6 +240,42 @@ GUI classes and methods
 """
 
 """
+Table of employees signed up for overtime and ranked
+"""
+class RankedTable(QTableWidget):
+    def __init__(self, r, c):
+        super().__init__(r, c)
+        self.check_change = True
+        self.init_ui()
+        
+    def init_ui(self):
+        self.cellChanged.connect(self.c_current)
+        self.show()
+        
+    def c_current(self):
+        if self.check_change:
+            row = self.currentRow()
+            col = self.currentColumn()
+            value = self.item(row, col)
+            value = value.text()
+    
+    def read_list(self):
+        ids = []
+        for i in unranked:
+            ids.append(i[0])
+        rank(ids)
+        self.check_change = False
+        self.setRowCount(0)
+        self.setColumnCount(6)
+        column = 0
+        rank()
+        for row_data in rankedlst:
+            row = self.rowCount()
+            self.insertRow(row)
+            #finish this :\
+            column = 0
+
+"""
 Table of employees signed up for overtime but not ranked
 """
 class UnrankedTable(QTableWidget):
@@ -257,7 +308,84 @@ class UnrankedTable(QTableWidget):
                 self.setItem(row, column, item)
                 column += 1
             column = 0
-                
+            
+"""
+Table of employees
+"""     
+class EmployeeTable(QTableWidget):
+    def __init__(self, r, c):
+        super().__init__(r, c)
+        self.check_change = True
+        self.init_ui()
+        
+    def init_ui(self):
+        self.cellChanged.connect(self.c_current)
+        self.show()
+        
+    def c_current(self):
+        if self.check_change:
+            row = self.currentRow()
+            col = self.currentColumn()
+            value = self.item(row, col)
+            value = value.text()
+    
+    def open_sheet(self):
+        self.check_change = False
+        fname = "Names.csv"
+        with open(fname, "r" , newline="") as f_object:
+            self.setRowCount(0)
+            self.setColumnCount(3)
+            my_file = reader(f_object)
+            for row_data in my_file:
+                row = self.rowCount()
+                self.insertRow(row)
+                for column, stuff in enumerate(row_data):
+                    item = QTableWidgetItem(stuff)
+                    self.setItem(row, column, item)
+        self.check_change = True    
+
+"""
+Window with table of ranked employees and form allowing user to assign employees for overtime
+"""
+class AssignOvertime(QMainWindow):
+    def __init__(self):
+        super().__init__()
+       
+        self.setWindowTitle("Overtime Ranks") 
+        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.resize(600, 400)
+       
+        #Create menu bar
+        assignbar = self.menuBar()
+       
+        #Create actions for menu buttons
+        assign_action = QAction("Assign Overtime", self)
+        close_action = QAction("Close", self)
+       
+        #Add menu buttons to menu bar
+        assignbar.addAction(assign_action)
+        assignbar.addAction(close_action)
+       
+        #Connect menu buttons to functions
+        assign_action.triggered.connect(self.assign_triggered)
+        close_action.triggered.connect(self.close_triggered)
+       
+        #set up table
+        self.form_widget = RankedTable(6, 6)
+        self.setCentralWidget(self.form_widget)
+        self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+       
+        headers = ["ID", "Name", "Position", "8 Hour", "4 Hour", "Rank"]
+        self.form_widget.setHorizontalHeaderLabels(headers)
+       
+        self.form_widget.read_list()
+    
+    def assign_triggered(self):
+        return None
+    
+    def close_triggered(self):
+        self.close()
+                   
 """
 Window with table of signed up employees and form allowing user to add employees to table
 """ 
@@ -265,7 +393,7 @@ class SignUp(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle("Assign Overtime")
+        self.setWindowTitle("Overtime Sign Up")
         self.setWindowIcon(QtGui.QIcon("Icon"))
         self.resize(450, 400)
         
@@ -346,55 +474,28 @@ class SignUp(QMainWindow):
                     
                     confirm = msgBox.exec_()
                     if confirm == QMessageBox.Ok:
-                        unranked.append([uid, eightblock, fourblock])           
+                        unranked.append([uid, eightblock, fourblock])
+                        changehours(uid, eightblock, fourblock)           
         self.form_widget.read_list()
     
     """
     Calculate rank order with rank() and display new window where the user can assign employees to overtime
     """
     def calc_triggered(self):
-        return False
-        
+        if len(unranked) >= 2:
+            assign.form_widget.read_list()
+            assign.show()
+        else:
+            errdlg = QErrorMessage()
+            errdlg.setWindowTitle("ERROR")
+            errdlg.showMessage("ERROR: NOT ENOUGH SIGNED UP---Please ensure there are 2 or more employees signed up for overtime")
+            errdlg.exec_()
+            
     """
     Close window
     """
     def close_triggered(self):
         self.close()
-
-"""
-Table of employees
-"""     
-class EmployeeTable(QTableWidget):
-    def __init__(self, r, c):
-        super().__init__(r, c)
-        self.check_change = True
-        self.init_ui()
-        
-    def init_ui(self):
-        self.cellChanged.connect(self.c_current)
-        self.show()
-        
-    def c_current(self):
-        if self.check_change:
-            row = self.currentRow()
-            col = self.currentColumn()
-            value = self.item(row, col)
-            value = value.text()
-    
-    def open_sheet(self):
-        self.check_change = False
-        fname = "Names.csv"
-        with open(fname, "r" , newline="") as f_object:
-            self.setRowCount(0)
-            self.setColumnCount(3)
-            my_file = reader(f_object)
-            for row_data in my_file:
-                row = self.rowCount()
-                self.insertRow(row)
-                for column, stuff in enumerate(row_data):
-                    item = QTableWidgetItem(stuff)
-                    self.setItem(row, column, item)
-        self.check_change = True    
                
 """
 First window with list of all employees and menu bar with buttons to calculate overtime rank, cancel overtime, add new employe, and quit application
@@ -535,9 +636,14 @@ class HomeWindow(QMainWindow):
         self.form_widget.open_sheet()    
                 
 if __name__ == "__main__":
+    unranked = ["1","2","3","4"]
+    rank(unranked)
+    print(rankedlst)
+    """
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     home = HomeWindow()
     signup = SignUp()
+    assign = AssignOvertime()
     sys.exit(app.exec_())
-    
+    """
