@@ -183,39 +183,7 @@ def shiftlast(id):
                 lastrow = row
         if bool(lastrow) == True:
             writer.writerow(lastrow)
-    shutil.move(tempfile.name, fname)  
-         
-"""
-Move row to its previous position in the csv file
-"""
-def shiftprevious(prevrow):
-    tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
-    count = 0
-    shifted = False
-    if prevrow["previousposition"] == "":
-        return False
-    prevrow["assigned"] = "No"
-    with open(fname, "r") as csvfile, tempfile:
-        reader = DictReader(csvfile, fieldnames=fields)
-        writer = DictWriter(tempfile, fieldnames=fields)
-        for row in reader:
-            count += 1
-            if shifted == False:
-                if row["id"] != prevrow["id"]:
-                    if row["assigned"] == "Yes":
-                        writer.writerow(prevrow)
-                        shifted = True
-                    elif int(row["previousposition"]) > int(prevrow["previousposition"]):
-                        writer.writerow(prevrow)
-                        shifted = True
-                    writer.writerow(row)
-                else:
-                    writer.writerow(prevrow)
-            else:
-                if row["id"] != prevrow["id"]:
-                    writer.writerow(row)
-    shutil.move(tempfile.name, fname)
-    return True
+    shutil.move(tempfile.name, fname) 
     
 """
 Confirm employee up for overtime
@@ -233,17 +201,6 @@ def confirmovertime(id):
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
     shiftlast(id)
-    
-"""    
-Cancel overtime for a employee who has been signed up    
-"""
-def cancelovertime(id):
-    dictall = viewall()
-    if id in dictall:
-        employee = dictall[id]
-        return(shiftprevious(employee))
-    else:
-        return False
 
 """
 GUI classes and methods
@@ -626,14 +583,12 @@ class HomeWindow(QMainWindow):
         #Create actions for menu buttons
         rank_action = QAction("Schedule Overtime", self)    
         view_action = QAction("View Assigned", self)
-        cancel_action = QAction("Cancel Overtime", self)
         newemp_action = QAction("Add New Employee", self)
         quit_action = QAction("Quit", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
         bar.addAction(view_action)
-        bar.addAction(cancel_action)
         bar.addAction(newemp_action)
         bar.addAction(quit_action)
         
@@ -641,7 +596,6 @@ class HomeWindow(QMainWindow):
         quit_action.triggered.connect(self.quit_trigger)
         view_action.triggered.connect(self.view_triggered)
         rank_action.triggered.connect(self.rank_triggered)
-        cancel_action.triggered.connect(self.cancel_triggered)
         newemp_action.triggered.connect(self.newemp_triggered)
         
         #set up table
@@ -686,32 +640,6 @@ class HomeWindow(QMainWindow):
             return position
         else:
             return None
-    
-    """
-    When cancel overtime button is clicked prompt the user to enter the id of the user to be remove
-    Prompt user to confirm and if confirmed prompt if the user would like to select a new user for overtime
-    """    
-    def cancel_triggered(self):
-        uid = self.getUID()
-        
-        if uid:
-            msgBox = QMessageBox()
-            msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid)
-            msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-            msgBox.setWindowTitle("Confirmation")
-            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                    
-            confirm = msgBox.exec_()
-            
-            if confirm == QMessageBox.Ok:
-                success = cancelovertime(uid)
-                if success == False:
-                    msgBox = QMessageBox()
-                    msgBox.setText("Error: Employee overtime could not be cancelled.\nPlease check if employee information is correct and if they were signed up for overtime.")
-                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-                    msgBox.setWindowTitle("Error")
-                    msgBox.setStandardButtons(QMessageBox.Ok)
-                    msgBox.exec_()
                     
     """
     View table of employees currently assigned to overtime
