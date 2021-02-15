@@ -584,12 +584,14 @@ class HomeWindow(QMainWindow):
         rank_action = QAction("Schedule Overtime", self)    
         view_action = QAction("View Assigned", self)
         newemp_action = QAction("Add New Employee", self)
+        edit_action = QAction("Edit", self)
         quit_action = QAction("Quit", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
         bar.addAction(view_action)
         bar.addAction(newemp_action)
+        bar.addAction(edit_action)
         bar.addAction(quit_action)
         
         #Connect menu buttons to functions
@@ -597,6 +599,7 @@ class HomeWindow(QMainWindow):
         view_action.triggered.connect(self.view_triggered)
         rank_action.triggered.connect(self.rank_triggered)
         newemp_action.triggered.connect(self.newemp_triggered)
+        edit_action.triggered.connect(self.edit_triggered)
         
         #set up table
         self.form_widget = EmployeeTable(10, 10)
@@ -612,14 +615,27 @@ class HomeWindow(QMainWindow):
         #show window
         self.show()              
     
-    #Methods for when you press menu button    
+    """
+    Methods for when you press menu button    
+    """
     def quit_trigger(self):
         qApp.quit()
     
+    """
+    Show signup page
+    """
     def rank_triggered(self):
         signup.show()
+     
+    """
+    Allow user to edit Names.csv
+    """    
+    def edit_triggered(self):
+        print("edit")
         
-    #Methods for getting employee information
+    """
+    Methods for getting employee information
+    """
     def getUID(self):
         uid, okPressed = QInputDialog.getText(self, "Get ID","Employee ID", QLineEdit.Normal, "")
         if okPressed and uid != "":
