@@ -15,7 +15,7 @@ from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
 
 fname = "Names.csv"
-fields = ["id", "name", "job", "8hours", "4hours", "assigned", "previousposition"]
+fields = ["id", "last","first","job","8hours","4hours","hiredreason","previousposition"]
 unranked = []
 unrankedids = []
 rankedlst = []
@@ -23,14 +23,8 @@ rankedlst = []
 """
 Opens csv file in append mode and adds a new employee using file and writer object
 """
-def newemployee(id, name, position):
-    toAppend = [id, name, position, "", "", "No", ""]
-    csvfile = open(fname)
-    read = reader(csvfile)
-    rows = sum(1 for row in read)
-    toAppend[6] = rows + 1
-    csvfile.close()
-        
+def newemployee(id, last, first, position):
+    toAppend = [id, last, first, position, "", "", "", ""]
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
         csv_writer.writerow(toAppend)
@@ -50,12 +44,13 @@ def viewall():
                 break
             dicttemp = {
                         "id" : line[0],
-                        "name" : line[1], 
-                        "job" : line[2],
-                        "8hours" : line[3],
-                        "4hours" : line[4],
-                        "assigned" : line[5],
-                        "previousposition": line[6],
+                        "first" : line[1], 
+                        "last" : line[2],
+                        "job" : line[3],
+                        "8hours" : line[4],
+                        "4hours" : line[5],
+                        "hiredreason": line[6],
+                        "previousposition": line[7]
                         }
             dictall[line[0]] = dicttemp
         f_object.close()
