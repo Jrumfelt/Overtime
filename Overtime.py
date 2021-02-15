@@ -5,6 +5,7 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
+from os import remove
 import sys
 from csv import *
 from PyQt5.QtWidgets import *
@@ -12,22 +13,28 @@ from PyQt5 import QtGui
 import shutil
 from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
-import atexit
 
 fname = "Names.csv"
-fields = ["id", "name", "job", "8hours", "4hours", "overtimerank", "previousposition"]
+fields = ["id", "name", "job", "8hours", "4hours", "assigned", "previousposition"]
 unranked = []
+unrankedids = []
 rankedlst = []
 
 """
 Opens csv file in append mode and adds a new employee using file and writer object
 """
 def newemployee(id, name, position):
-    toAppend = [id, name, position, "", "", "", ""]
+    toAppend = [id, name, position, "", "", "No", ""]
+    csvfile = open(fname)
+    read = reader(csvfile)
+    rows = sum(1 for row in read)
+    toAppend[6] = rows + 1
+    csvfile.close()
+        
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
         csv_writer.writerow(toAppend)
-        f_object.close()
+        f_object.close()    
 
 """        
 Returns a dict of all employees with id as key and the values being a 
@@ -47,7 +54,7 @@ def viewall():
                         "job" : line[2],
                         "8hours" : line[3],
                         "4hours" : line[4],
-                        "overtimerank" : line[5],
+                        "assigned" : line[5],
                         "previousposition": line[6],
                         }
             dictall[line[0]] = dicttemp
@@ -59,7 +66,6 @@ Takes a list of employee IDs and calculates their overtime priority rank based o
 Appends rankedlst
 """
 def rank(ids):
-    tempposition = 0
     #dictionaries of all the positions
     fsbptl = []
     fsbsgt = []
@@ -73,10 +79,8 @@ def rank(ids):
     dictall = viewall()
     #Place in the correct dictionary if it is one of the given ids
     for key, value in dictall.items():
-        tempposition += 1
         if key in ids:
             templst = []
-            value["previousposition"] = tempposition
             if value["job"] == "FSB PTL":
                 for v2 in value.values():
                     templst.append(v2)
@@ -167,21 +171,6 @@ def changehours(id, eighthour, fourhour):
                 row["8hours"], row["4hours"] = eighthour, fourhour
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
-    
-"""
-Change the overtime rank and previous position for a given employee id in Names.csv
-"""
-def rankfile(id, rank, prev):
-    tempfile = NamedTemporaryFile(mode="w", delete=False, newline = "")
-    with open(fname, "r") as csvfile, tempfile:
-        reader = DictReader(csvfile, fieldnames=fields)
-        writer = DictWriter(tempfile, fieldnames=fields)
-        for row in reader:
-            if row["id"] == id:
-                row["rank"] = rank
-                row["previousposition"] = prev
-            writer.writerow(row)
-    shutil.move(tempfile.name, fname)
 
 """
 Shift row to bottom of csv to reset their rank priority 
@@ -207,17 +196,29 @@ Move row to its previous position in the csv file
 def shiftprevious(prevrow):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
     count = 0
+    shifted = False
     if prevrow["previousposition"] == "":
         return False
+    prevrow["assigned"] = "No"
     with open(fname, "r") as csvfile, tempfile:
         reader = DictReader(csvfile, fieldnames=fields)
         writer = DictWriter(tempfile, fieldnames=fields)
         for row in reader:
             count += 1
-            if row["id"] != prevrow["id"]:
-                if count == int(prevrow["previousposition"]):
+            if shifted == False:
+                if row["id"] != prevrow["id"]:
+                    if row["assigned"] == "Yes":
+                        writer.writerow(prevrow)
+                        shifted = True
+                    elif int(row["previousposition"]) > int(prevrow["previousposition"]):
+                        writer.writerow(prevrow)
+                        shifted = True
+                    writer.writerow(row)
+                else:
                     writer.writerow(prevrow)
-                writer.writerow(row)
+            else:
+                if row["id"] != prevrow["id"]:
+                    writer.writerow(row)
     shutil.move(tempfile.name, fname)
     return True
     
@@ -225,18 +226,15 @@ def shiftprevious(prevrow):
 Confirm employee up for overtime
 """
 def confirmovertime(id):
-    position = 0
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
     with open(fname, "r") as csvfile, tempfile:
         reader = DictReader(csvfile, fieldnames=fields)
         writer = DictWriter(tempfile, fieldnames=fields)
         for row in reader:
-            position += 1
             if row["id"] == id:
-                row["overtimerank"] = "" 
+                row["assigned"] = "Yes" 
                 row["8hours"] = "" 
                 row["4hours"] = ""
-                row["previousposition"] = str(position)
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
     shiftlast(id)
@@ -251,17 +249,53 @@ def cancelovertime(id):
         return(shiftprevious(employee))
     else:
         return False
-    
-def exitapp():
-    for i in rankedlst:
-        id = i[0]
-        rank = i[5]
-        prev = i[6]
-        rankfile(id, rank, prev)
 
 """
 GUI classes and methods
 """
+
+"""
+Table of employees currently assigned overtime
+"""
+class AssignedTable(QTableWidget):
+    def __init__(self, r, c):
+        super().__init__(r, c)
+        self.check_change = True
+        self.init_ui()
+        
+    def init_ui(self):
+        self.cellChanged.connect(self.c_current)
+        self.show()
+        
+    def c_current(self):
+        if self.check_change:
+            row = self.currentRow()
+            col = self.currentColumn()
+            value = self.item(row, col)
+            value = value.text()
+            
+    def open_sheet(self):
+        self.check_change = False
+        assignedlst = []
+        with open(fname, "r", newline="") as f_object:
+            csvfile = DictReader(f_object, fieldnames=fields)
+            for row in csvfile:
+                if row["assigned"] == "Yes":
+                    id = row["id"]
+                    name = row["name"]
+                    newrow = [id, name, "Yes"]
+                    assignedlst.append(newrow)
+        self.setRowCount(0)
+        self.setColumnCount(3)
+        column = 0
+        for row_data in assignedlst:
+            row = self.rowCount()
+            self.insertRow(row)
+            for col_data in row_data:
+                item = QTableWidgetItem(col_data)
+                self.setItem(row, column, item)
+                column +=1
+            column = 0
 
 """
 Table of employees signed up for overtime and ranked
@@ -284,10 +318,7 @@ class RankedTable(QTableWidget):
             value = value.text()
     
     def read_list(self):
-        ids = []
-        for i in unranked:
-            ids.append(i[0])
-        rank(ids)
+        rank(unrankedids)
         self.check_change = False
         self.setRowCount(0)
         self.setColumnCount(5)
@@ -357,7 +388,6 @@ class EmployeeTable(QTableWidget):
     
     def open_sheet(self):
         self.check_change = False
-        fname = "Names.csv"
         with open(fname, "r" , newline="") as f_object:
             self.setRowCount(0)
             self.setColumnCount(3)
@@ -406,8 +436,36 @@ class AssignOvertime(QMainWindow):
        
         self.form_widget.read_list()
     
-    def assign_triggered(self):
+    def getUID(self):
+        uid, okPressed = QInputDialog.getText(self, "Get ID","Employee ID", QLineEdit.Normal, "")
+        if okPressed and uid != "":
+            return uid
         return None
+    
+    def assign_triggered(self):
+        uid = self.getUID()
+        while uid not in unrankedids and uid:
+            errdlg = QErrorMessage()
+            errdlg.setWindowTitle("ERROR")
+            errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been signed up")
+            errdlg.exec_()
+            uid = self.getUID()
+        msgBox = QMessageBox()
+        msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid)
+        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+        msgBox.setWindowTitle("Confirmation")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        confirm = msgBox.exec_()
+        if confirm == QMessageBox.Ok:
+            for i in unranked:
+                if i[0] == uid:
+                    unranked.remove(i)
+                    unrankedids.remove(uid)
+            for i in rankedlst:
+                if i[0] == uid:
+                    rankedlst.remove(i)
+            confirmovertime(uid)
+        self.form_widget.read_list()
     
     def close_triggered(self):
         self.close()
@@ -429,16 +487,19 @@ class SignUp(QMainWindow):
         #Create actions for menu buttons
         add_action = QAction("Add Employee", self)
         calc_action = QAction("Calculate Overtime", self)
+        delete_action = QAction("Withdraw Employee", self)
         close_action = QAction("Close", self)
         
         #Add menu buttons to menu bar
         assignbar.addAction(add_action)
         assignbar.addAction(calc_action)
+        assignbar.addAction(delete_action)
         assignbar.addAction(close_action)
         
         #Connect menu buttons to functions
         add_action.triggered.connect(self.add_triggered)
         calc_action.triggered.connect(self.calc_triggered)
+        delete_action.triggered.connect(self.delete_triggered)
         close_action.triggered.connect(self.close_triggered)
         
         #set up table
@@ -485,6 +546,12 @@ class SignUp(QMainWindow):
             errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been added")
             errdlg.exec_()
             uid = self.getUID()
+        while uid and uid in unrankedids:
+            errdlg = QErrorMessage()
+            errdlg.setWindowTitle("ERROR")
+            errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID has not already been signed up or assigned overtime")
+            errdlg.exec_()
+            uid = self.getUID()
         if uid:
             eightblock = self.getEightBlock()
             if eightblock:
@@ -500,6 +567,7 @@ class SignUp(QMainWindow):
                     
                     confirm = msgBox.exec_()
                     if confirm == QMessageBox.Ok:
+                        unrankedids.append(uid)
                         unranked.append([uid, eightblock, fourblock])
                         changehours(uid, eightblock, fourblock)           
         self.form_widget.read_list()
@@ -508,7 +576,7 @@ class SignUp(QMainWindow):
     Calculate rank order with rank() and display new window where the user can assign employees to overtime
     """
     def calc_triggered(self):
-        if len(unranked) >= 2:
+        if len(unranked) >= 1:
             assign.form_widget.read_list()
             assign.show()
         else:
@@ -516,7 +584,30 @@ class SignUp(QMainWindow):
             errdlg.setWindowTitle("ERROR")
             errdlg.showMessage("ERROR: NOT ENOUGH SIGNED UP---Please ensure there are 2 or more employees signed up for overtime")
             errdlg.exec_()
-            
+    
+    """
+    Remove employee from signed up list
+    """
+    def delete_triggered(self):
+        if len(unranked) > 0:
+            uid = self.getUID()
+            while uid and uid not in unrankedids:
+                errdlg = QErrorMessage()
+                errdlg.setWindowTitle("ERROR")
+                errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been signed up")
+                errdlg.exec_()
+                uid = self.getUID()
+            for i in unranked:
+                if i[0] == uid:
+                    unranked.remove(i)
+                    unrankedids.remove(uid)
+            self.form_widget.read_list()
+        else:
+            errdlg = QErrorMessage()
+            errdlg.setWindowTitle("ERROR")
+            errdlg.showMessage("ERROR: NO EMPLOYEES SIGNED UP")
+            errdlg.exec_()
+        
     """
     Close window
     """
@@ -532,25 +623,28 @@ class HomeWindow(QMainWindow):
             
         self.setWindowTitle("Overtime Priority")
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(450, 400)
+        self.resize(500, 400)
         
         #create menu bar
         bar = self.menuBar()
         
         #Create actions for menu buttons
         rank_action = QAction("Schedule Overtime", self)    
+        view_action = QAction("View Assigned", self)
         cancel_action = QAction("Cancel Overtime", self)
         newemp_action = QAction("Add New Employee", self)
         quit_action = QAction("Quit", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
+        bar.addAction(view_action)
         bar.addAction(cancel_action)
         bar.addAction(newemp_action)
         bar.addAction(quit_action)
         
         #Connect menu buttons to functions
         quit_action.triggered.connect(self.quit_trigger)
+        view_action.triggered.connect(self.view_triggered)
         rank_action.triggered.connect(self.rank_triggered)
         cancel_action.triggered.connect(self.cancel_triggered)
         newemp_action.triggered.connect(self.newemp_triggered)
@@ -604,6 +698,7 @@ class HomeWindow(QMainWindow):
     """    
     def cancel_triggered(self):
         uid = self.getUID()
+        
         if uid:
             msgBox = QMessageBox()
             msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid)
@@ -615,7 +710,6 @@ class HomeWindow(QMainWindow):
             
             if confirm == QMessageBox.Ok:
                 success = cancelovertime(uid)
-                print(success)
                 if success == False:
                     msgBox = QMessageBox()
                     msgBox.setText("Error: Employee overtime could not be cancelled.\nPlease check if employee information is correct and if they were signed up for overtime.")
@@ -623,19 +717,12 @@ class HomeWindow(QMainWindow):
                     msgBox.setWindowTitle("Error")
                     msgBox.setStandardButtons(QMessageBox.Ok)
                     msgBox.exec_()
-                else:
-                    #ask if they want to assign someone new
-                    msgBox = QMessageBox()
-                    msgBox.setText("Assign New Employee to Overtime?")
-                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-                    msgBox.setWindowTitle("Confirmation")
-                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                     
-                    confirm = msgBox.exec_()
-                    
-                    if confirm == QMessageBox.Ok:
-                        signup.show()
-                        #Change assign to other window
+    """
+    View table of employees currently assigned to overtime
+    """                    
+    def view_triggered(self):
+        return False
 
     """
     When new employee button is clicked prompt the user to enter the id, name, and position of employee
@@ -667,6 +754,5 @@ if __name__ == "__main__":
     home = HomeWindow()
     signup = SignUp()
     assign = AssignOvertime()
-    atexit.register(exitapp())
     sys.exit(app.exec_())
     
