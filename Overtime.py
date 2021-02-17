@@ -5,9 +5,9 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
-from os import remove
 import sys
 from csv import *
+import tempfile
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
 import shutil
@@ -15,7 +15,8 @@ from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
 
 fname = "Names.csv"
-fields = ["id", "last","first","job","8hours","4hours","hired","hiredesc","previousposition"]
+editfname = "EditLog.txt"
+fields = ["id", "last","first","job","hired","hiredesc","previousposition"]
 unranked = []
 unrankedids = []
 rankedlst = []
@@ -24,7 +25,7 @@ rankedlst = []
 Opens csv file in append mode and adds a new employee using file and writer object
 """
 def newemployee(id, last, first, position):
-    toAppend = [id, last, first, position, "", "", "", ""]
+    toAppend = [id, last, first, position,"", "", ""]
     with open(fname, "a", newline="") as f_object:
         csv_writer = writer(f_object)
         csv_writer.writerow(toAppend)
@@ -46,11 +47,9 @@ def viewall():
                         "first" : line[1], 
                         "last" : line[2],
                         "job" : line[3],
-                        "8hours" : line[4],
-                        "4hours" : line[5],
-                        "hired" : line[6],
-                        "hiredreason": line[7],
-                        "previousposition": line[8]
+                        "hired" : line[4],
+                        "hiredreason": line[5],
+                        "previousposition": line[6]
                         }
             dictall[line[0]] = dicttemp
         f_object.close()
@@ -160,20 +159,6 @@ def rank(ids):
         if i not in rankedlst:
             rankedlst.append(i)
 
-"""    
-Change the preferred hours for 8 and 4 hour overtime blocks for a given employee id 
-"""
-def changehours(id, eighthour, fourhour):
-    tempfile = NamedTemporaryFile(mode="w", delete=False, newline = "")
-    with open (fname, "r") as csvfile, tempfile:
-        reader = DictReader(csvfile, fieldnames=fields)
-        writer = DictWriter(tempfile, fieldnames=fields)
-        for row in reader:
-            if row["id"] == id:
-                row["8hours"], row["4hours"] = eighthour, fourhour
-            writer.writerow(row)
-    shutil.move(tempfile.name, fname)
-
 """
 Shift row to bottom of csv to reset their rank priority 
 """    
@@ -202,14 +187,14 @@ def confirmovertime(id, desc):
         writer = DictWriter(tempfile, fieldnames=fields)
         for row in reader:
             if row["id"] == id:
-                row["hired"] = "True" 
+                row["hired"] = "Yes" 
                 row["8hours"] = "" 
                 row["4hours"] = ""
                 row["hiredesc"] = desc
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
     shiftlast(id)
-
+        
 """
 GUI classes and methods
 """
@@ -240,7 +225,7 @@ class HiredTable(QTableWidget):
         with open(fname, "r", newline="") as f_object:
             csvfile = DictReader(f_object, fieldnames=fields)
             for row in csvfile:
-                if row["hired"] == "True":
+                if row["hired"] == "Yes":
                     id = row["id"]
                     name = row["name"]
                     newrow = [id, name, "Yes"]
@@ -281,7 +266,7 @@ class RankedTable(QTableWidget):
         rank(unrankedids)
         self.check_change = False
         self.setRowCount(0)
-        self.setColumnCount(5)
+        self.setColumnCount(3)
         column = 0
         for row_data in rankedlst:
             row = self.rowCount()
@@ -315,7 +300,7 @@ class UnrankedTable(QTableWidget):
     def read_list(self):
         self.check_change = False
         self.setRowCount(0)
-        self.setColumnCount(3)
+        self.setColumnCount(5)
         column = 0
         for row_data in unranked:
             row = self.rowCount()
@@ -327,7 +312,54 @@ class UnrankedTable(QTableWidget):
             column = 0
             
 """
-Table of employees
+Table of employees for edit window
+"""
+class EditTable(QTableWidget):
+    def __init__(self, r, c):
+        super().__init__(r, c)
+        self.check_change = True
+        self.init_ui()
+        
+    def init_ui(self):
+        self.cellChanged.connect(self.c_current)
+        self.show()
+        
+    def c_current(self):
+        if self.check_change:
+            row = self.currentRow()
+            col = self.currentColumn()
+            value = self.item(row, col)
+            value = value.text()
+    
+    def open_sheet(self):
+        self.check_change = False
+        with open(fname, "r" , newline="") as f_object:
+            self.setRowCount(0)
+            self.setColumnCount(7)
+            my_file = reader(f_object)
+            for row_data in my_file:
+                row = self.rowCount()
+                self.insertRow(row)
+                for column, stuff in enumerate(row_data):
+                    item = QTableWidgetItem(stuff)
+                    self.setItem(row, column, item)
+        self.check_change = True 
+    
+    def getRows(self):
+        rows = []
+        for row in range(self.rowCount()):
+            row_data = []
+            for column in range(self.columnCount()):
+                item = self.item(row, column)
+                if item is not None:
+                    row_data.append(item.text())
+                else:
+                    row_data.append("")
+            rows.append(row_data)
+        return rows    
+            
+"""
+Table of employees for main window
 """     
 class EmployeeTable(QTableWidget):
     def __init__(self, r, c):
@@ -350,7 +382,7 @@ class EmployeeTable(QTableWidget):
         self.check_change = False
         with open(fname, "r" , newline="") as f_object:
             self.setRowCount(0)
-            self.setColumnCount(3)
+            self.setColumnCount(4)
             my_file = reader(f_object)
             for row_data in my_file:
                 row = self.rowCount()
@@ -391,7 +423,7 @@ class AssignOvertime(QMainWindow):
         self.setCentralWidget(self.form_widget)
         self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
        
-        headers = ["ID", "Name", "Position", "8 Hour", "4 Hour"]
+        headers = ["ID", "Last", "First", "Position", "8 Hour", "4 Hour"]
         self.form_widget.setHorizontalHeaderLabels(headers)
        
         self.form_widget.read_list()
@@ -483,7 +515,7 @@ class SignUp(QMainWindow):
         self.setCentralWidget(self.form_widget)
         self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
-        headers = ["ID", "8 Hour", "4 Hour"]
+        headers = ["ID", "Last","First","8 Hour", "4 Hour"]
         self.form_widget.setHorizontalHeaderLabels(headers)
         
         self.form_widget.read_list()
@@ -541,8 +573,7 @@ class SignUp(QMainWindow):
                     confirm = msgBox.exec_()
                     if confirm == QMessageBox.Ok:
                         unrankedids.append(uid)
-                        unranked.append([uid, eightblock, fourblock])
-                        changehours(uid, eightblock, fourblock)           
+                        unranked.append([uid, eightblock, fourblock])   
         self.form_widget.read_list()
     
     """
@@ -598,14 +629,21 @@ class EditWindow(QMainWindow):
         self.setWindowIcon(QtGui.QIcon("Icon"))
         self.resize(500, 400)
         
-        #create menu bar
         bar = self.menuBar()
         
-        #set up table
-        self.form_widget = EmployeeTable(10, 10)
+        submit_action = QAction("Submit Edit", self)
+        close_action = QAction("Close", self)
+        
+        bar.addAction(submit_action)
+        bar.addAction(close_action)
+        
+        submit_action.triggered.connect(self.submit_triggered)
+        submit_action.triggered.connect(self.close_triggered)        
+        
+        self.form_widget = EditTable(10, 10)
         self.setCentralWidget(self.form_widget)
             
-        headers = ["ID", "Name", "Position"]
+        headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
         self.form_widget.setHorizontalHeaderLabels(headers)
         
         self.form_widget.verticalHeader().setSectionsMovable(True)
@@ -613,7 +651,45 @@ class EditWindow(QMainWindow):
         self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
             
         self.form_widget.open_sheet()
-                  
+    
+    """
+    Method to get description of edit from user
+    """    
+    def getDesc(self):
+        desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
+        if okPressed and desc != "":
+            return desc
+        return "None Provided"
+        
+    """
+    Methods for menu buttons
+    """
+    """
+    Close Window
+    """
+    def close_triggered(self):
+        self.close()
+            
+    """
+    Save edit to Names.csv and add description to EditLog.txt
+    """
+    def submit_triggered(self):
+        desc = self.getDesc()
+        msgBox = QMessageBox()
+        msgBox.setText("Confirm edit")
+        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+        msgBox.setWindowTitle("Confirmation")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        
+        confirm = msgBox.exec_()
+        if confirm == QMessageBox.Ok:
+            with open(editfname, "a", newline="") as f:
+                f.write(desc + "\n")
+            rows = self.form_widget.getRows()
+            print(rows)
+            with open(fname, "w", newline="") as f:
+                w = writer(f)
+                w.writerows(rows)
              
 """
 First window with list of all employees and menu bar with buttons to calculate overtime rank, cancel overtime, add new employe, and quit application
@@ -654,13 +730,8 @@ class HomeWindow(QMainWindow):
         self.form_widget = EmployeeTable(10, 10)
         self.setCentralWidget(self.form_widget)
         self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        
-        self.form_widget.verticalHeader().setSectionsMovable
-        self.form_widget.verticalHeader().setDragEnabled(True)
-        self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-        
             
-        headers = ["ID", "Name", "Position"]
+        headers = ["ID", "Last", "First","Job"]
         self.form_widget.setHorizontalHeaderLabels(headers)
             
         self.form_widget.open_sheet()
