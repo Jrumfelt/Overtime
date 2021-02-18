@@ -312,9 +312,9 @@ class UnrankedTable(QTableWidget):
             column = 0
             
 """
-Table of employees for edit window
-"""
-class EditTable(QTableWidget):
+Table of employees with all information
+"""     
+class EmployeeTable(QTableWidget):
     def __init__(self, r, c):
         super().__init__(r, c)
         self.check_change = True
@@ -356,41 +356,8 @@ class EditTable(QTableWidget):
                 else:
                     row_data.append("")
             rows.append(row_data)
-        return rows    
-            
-"""
-Table of employees for main window
-"""     
-class EmployeeTable(QTableWidget):
-    def __init__(self, r, c):
-        super().__init__(r, c)
-        self.check_change = True
-        self.init_ui()
-        
-    def init_ui(self):
-        self.cellChanged.connect(self.c_current)
-        self.show()
-        
-    def c_current(self):
-        if self.check_change:
-            row = self.currentRow()
-            col = self.currentColumn()
-            value = self.item(row, col)
-            value = value.text()
-    
-    def open_sheet(self):
-        self.check_change = False
-        with open(fname, "r" , newline="") as f_object:
-            self.setRowCount(0)
-            self.setColumnCount(4)
-            my_file = reader(f_object)
-            for row_data in my_file:
-                row = self.rowCount()
-                self.insertRow(row)
-                for column, stuff in enumerate(row_data):
-                    item = QTableWidgetItem(stuff)
-                    self.setItem(row, column, item)
-        self.check_change = True    
+            print(row_data)
+        return rows   
 
 """
 Window with table of ranked employees and form allowing user to assign employees for overtime
@@ -426,6 +393,7 @@ class AssignOvertime(QMainWindow):
         headers = ["ID", "Last", "First", "Position", "8 Hour", "4 Hour"]
         self.form_widget.setHorizontalHeaderLabels(headers)
        
+        self.form_widget.setAlternatingRowColors(True)
         self.form_widget.read_list()
     
     """
@@ -518,6 +486,7 @@ class SignUp(QMainWindow):
         headers = ["ID", "Last","First","8 Hour", "4 Hour"]
         self.form_widget.setHorizontalHeaderLabels(headers)
         
+        self.form_widget.setAlternatingRowColors(True)
         self.form_widget.read_list()
      
     """
@@ -619,121 +588,55 @@ class SignUp(QMainWindow):
         self.close()
 
 """
-Window with editable employee table 
-"""
-class EditWindow(QMainWindow):
-    def __init__(self):
-        super().__init__() 
-            
-        self.setWindowTitle("Overtime Priority")
-        self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(500, 400)
-        
-        bar = self.menuBar()
-        
-        submit_action = QAction("Submit Edit", self)
-        close_action = QAction("Close", self)
-        
-        bar.addAction(submit_action)
-        bar.addAction(close_action)
-        
-        submit_action.triggered.connect(self.submit_triggered)
-        submit_action.triggered.connect(self.close_triggered)        
-        
-        self.form_widget = EditTable(10, 10)
-        self.setCentralWidget(self.form_widget)
-            
-        headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
-        self.form_widget.setHorizontalHeaderLabels(headers)
-        
-        self.form_widget.verticalHeader().setSectionsMovable(True)
-        self.form_widget.verticalHeader().setDragEnabled(True)
-        self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-            
-        self.form_widget.open_sheet()
-    
-    """
-    Method to get description of edit from user
-    """    
-    def getDesc(self):
-        desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
-        if okPressed and desc != "":
-            return desc
-        return "None Provided"
-        
-    """
-    Methods for menu buttons
-    """
-    """
-    Close Window
-    """
-    def close_triggered(self):
-        self.close()
-            
-    """
-    Save edit to Names.csv and add description to EditLog.txt
-    """
-    def submit_triggered(self):
-        desc = self.getDesc()
-        msgBox = QMessageBox()
-        msgBox.setText("Confirm edit")
-        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-        msgBox.setWindowTitle("Confirmation")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        
-        confirm = msgBox.exec_()
-        if confirm == QMessageBox.Ok:
-            with open(editfname, "a", newline="") as f:
-                f.write(desc + "\n")
-            rows = self.form_widget.getRows()
-            print(rows)
-            with open(fname, "w", newline="") as f:
-                w = writer(f)
-                w.writerows(rows)
-             
-"""
-First window with list of all employees and menu bar with buttons to calculate overtime rank, cancel overtime, add new employe, and quit application
+First window with list of all employees and menu bar with buttons to calculate overtime rank, cancel overtime, edit, and quit application
 """     
 class HomeWindow(QMainWindow):
     def __init__(self):
         super().__init__() 
             
+        self.editable = False
         self.setWindowTitle("Overtime Priority")
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(500, 400)
+        self.resize(800, 600)
         
         #create menu bar
         bar = self.menuBar()
         
         #Create actions for menu buttons
         rank_action = QAction("Schedule Overtime", self)    
-        view_action = QAction("View Hired", self)
         newemp_action = QAction("Add New Employee", self)
-        edit_action = QAction("Edit", self)
+        edit_action = QAction("Editable", self)
+        submit_action = QAction("Submit Edit", self)
         quit_action = QAction("Quit", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
-        bar.addAction(view_action)
-        bar.addAction(newemp_action)
-        bar.addAction(edit_action)
+        
+        #Create edit root menu
+        edit = bar.addMenu("Edit")
+        
         bar.addAction(quit_action)
+        edit.addAction(edit_action)
+        edit.addAction(newemp_action)
+        edit.addAction(submit_action)
         
         #Connect menu buttons to functions
         quit_action.triggered.connect(self.quit_trigger)
-        view_action.triggered.connect(self.view_triggered)
         rank_action.triggered.connect(self.rank_triggered)
         newemp_action.triggered.connect(self.newemp_triggered)
         edit_action.triggered.connect(self.edit_triggered)
+        submit_action.triggered.connect(self.submit_triggered)
         
         #set up table
         self.form_widget = EmployeeTable(10, 10)
         self.setCentralWidget(self.form_widget)
         self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
             
-        headers = ["ID", "Last", "First","Job"]
+        headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
         self.form_widget.setHorizontalHeaderLabels(headers)
             
+        self.form_widget.setAlternatingRowColors(True)
+        
         self.form_widget.open_sheet()
             
         #show window
@@ -758,7 +661,70 @@ class HomeWindow(QMainWindow):
     Allow user to edit Names.csv
     """    
     def edit_triggered(self):
-        edit.show()
+        palette = QtGui.QPalette()
+        if not self.editable:
+            self.editable = True
+            self.form_widget.verticalHeader().setSectionsMovable(True)
+            self.form_widget.verticalHeader().setDragEnabled(True)
+            self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+            self.form_widget.setEditTriggers(QAbstractItemView.DoubleClicked)
+            palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#CCE5FF"))
+            palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#FFCCCC"))
+            app.setPalette(palette)
+        else:
+            self.editable = False
+            self.form_widget.verticalHeader().setSectionsMovable(False)
+            self.form_widget.verticalHeader().setDragEnabled(False)
+            self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+            self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.form_widget.open_sheet()
+            palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
+            palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
+            app.setPalette(palette)
+
+    """
+    Save edit to Names.csv and add description to EditLog.txt
+    """
+    def submit_triggered(self):
+        desc = self.getDesc()
+        msgBox = QMessageBox()
+        msgBox.setText("Confirm edit")
+        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+        msgBox.setWindowTitle("Confirmation")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        
+        confirm = msgBox.exec_()
+        if confirm == QMessageBox.Ok:
+            with open(editfname, "a", newline="") as f:
+                f.write(desc + "\n")
+            rows = self.form_widget.getRows()
+            with open(fname, "w", newline="") as f:
+                w = writer(f)
+                w.writerows(rows)
+    
+    """
+    When new employee button is clicked prompt the user to enter the id, name, and position of employee
+    On user confirmation that the information is correct add to Names.csv using newemployee() function
+    """
+    def newemp_triggered(self):
+        uid = self.getUID()
+        if uid:
+            name = self.getName()
+            if name:
+                position = self.getPosition()
+                if position:
+                    #Create confirmation window
+                    msgBox = QMessageBox()
+                    msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
+                        "\nEmployee Name:    " + name + "\nEmployee Position:    " + position)
+                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                    msgBox.setWindowTitle("Confirmation")
+                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    
+                    confirm = msgBox.exec_()
+                    if confirm == QMessageBox.Ok:
+                        newemployee(uid, name, position)
+        self.form_widget.open_sheet() 
         
     """
     Methods for getting employee information
@@ -782,44 +748,28 @@ class HomeWindow(QMainWindow):
         if okPressed and position:
             return position
         else:
-            return None
-                    
+            return None   
+    
     """
-    View table of employees currently assigned to overtime
-    """                    
-    def view_triggered(self):
-        return False
-
-    """
-    When new employee button is clicked prompt the user to enter the id, name, and position of employee
-    On user confirmation that the information is correct add to Names.csv using newemployee() function
-    """
-    def newemp_triggered(self):
-        uid = self.getUID()
-        if uid:
-            name = self.getName()
-            if name:
-                position = self.getPosition()
-                if position:
-                    #Create confirmation window
-                    msgBox = QMessageBox()
-                    msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
-                        "\nEmployee Name:    " + name + "\nEmployee Position:    " + position)
-                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-                    msgBox.setWindowTitle("Confirmation")
-                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                    
-                    confirm = msgBox.exec_()
-                    if confirm == QMessageBox.Ok:
-                        newemployee(uid, name, position)
-        self.form_widget.open_sheet()    
+    Method to get description of edit from user
+    """    
+    def getDesc(self):
+        desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
+        if okPressed and desc != "":
+            return desc
+        return "None Provided"
                 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
+    palette = QtGui.QPalette()
+    palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
+    palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
+    app.setPalette(palette)
+    
     home = HomeWindow()
     signup = SignUp()
     assign = AssignOvertime()
-    edit = EditWindow()
+    
     sys.exit(app.exec_())
     
