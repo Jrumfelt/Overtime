@@ -356,7 +356,6 @@ class EmployeeTable(QTableWidget):
                 else:
                     row_data.append("")
             rows.append(row_data)
-            print(row_data)
         return rows   
 
 """
@@ -668,8 +667,8 @@ class HomeWindow(QMainWindow):
             self.form_widget.verticalHeader().setDragEnabled(True)
             self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
             self.form_widget.setEditTriggers(QAbstractItemView.DoubleClicked)
-            palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#CCE5FF"))
-            palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#FFCCCC"))
+            palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#72889E"))
+            palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#9E7272"))
             app.setPalette(palette)
         else:
             self.editable = False
@@ -749,10 +748,7 @@ class HomeWindow(QMainWindow):
             return position
         else:
             return None   
-    
-    """
-    Method to get description of edit from user
-    """    
+  
     def getDesc(self):
         desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
         if okPressed and desc != "":
