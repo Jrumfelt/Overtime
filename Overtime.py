@@ -357,7 +357,7 @@ class EmployeeTable(QTableWidget):
                     row_data.append("")
             rows.append(row_data)
         return rows   
-
+    
 """
 Window with table of ranked employees and form allowing user to assign employees for overtime
 """
@@ -708,21 +708,24 @@ class HomeWindow(QMainWindow):
     def newemp_triggered(self):
         uid = self.getUID()
         if uid:
-            name = self.getName()
-            if name:
-                position = self.getPosition()
-                if position:
-                    #Create confirmation window
-                    msgBox = QMessageBox()
-                    msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
-                        "\nEmployee Name:    " + name + "\nEmployee Position:    " + position)
-                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-                    msgBox.setWindowTitle("Confirmation")
-                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                    
-                    confirm = msgBox.exec_()
-                    if confirm == QMessageBox.Ok:
-                        newemployee(uid, name, position)
+            lastname = self.getLast()
+            if lastname:
+                firstname = self.getFirst()
+                if firstname:
+                    position = self.getPosition()
+                    if position:
+                        #Create confirmation window
+                        msgBox = QMessageBox()
+                        msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
+                            "\nEmployee Name:    " + lastname + " " + firstname + "\nEmployee Position:    " + position)
+                        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                        msgBox.setWindowTitle("Confirmation")
+                        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                            
+                        confirm = msgBox.exec_()
+                        if confirm == QMessageBox.Ok:
+                            all = d
+                            newemployee(uid, lastname, firstname, position)
         self.form_widget.open_sheet() 
         
     """
@@ -734,8 +737,15 @@ class HomeWindow(QMainWindow):
             return uid
         return None
 
-    def getName(self):
-        name, okPressed = QInputDialog.getText(self, "Get Name", "Employee Name", QLineEdit.Normal, "")
+    def getLast(self):
+        name, okPressed = QInputDialog.getText(self, "Get Name", "Employee Last Name", QLineEdit.Normal, "")
+        if okPressed and name != "":
+            return name
+        else:
+            return None
+    
+    def getFirst(self):
+        name, okPressed = QInputDialog.getText(self, "Get Name", "Employee First Name", QLineEdit.Normal, "")
         if okPressed and name != "":
             return name
         else:
