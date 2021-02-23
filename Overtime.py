@@ -5,6 +5,7 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
+from os import close
 import sys
 from csv import *
 from datetime import datetime
@@ -420,9 +421,6 @@ class ViewLogs(QWidget):
         
         self.edit.setReadOnly(True)
         self.hire.setReadOnly(True)
-        
-        self.edit.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.hire.setLineWrapMode(QPlainTextEdit.NoWrap)
           
         self.editlabel.setText("Edit Log")
         self.hirelabel.setText("Hire Log")
@@ -450,7 +448,7 @@ class EditFile(QMainWindow):
         
         self.setWindowTitle("Overtime Ranks") 
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(550, 400)
+        self.resize(800, 600)
         
         #Create Menu Bar
         bar = self.menuBar()
@@ -459,16 +457,19 @@ class EditFile(QMainWindow):
         up_action = QAction("Move Up", self)
         down_action = QAction("Move Down", self)
         submit_action = QAction("Submit Edit", self)
+        close_action = QAction("Close", self)
         
         #Add actions to bar
         bar.addAction(up_action)
         bar.addAction(down_action)
         bar.addAction(submit_action)
+        bar.addAction(close_action)
         
         #Connect actions to functions
         up_action.triggered.connect(self.up_triggered)
         down_action.triggered.connect(self.down_triggered)
         submit_action.triggered.connect(self.submit_triggered)
+        close_action.triggered.connect(self.close_triggered)
         
         #Set up table
         self.table_widget = EmployeeTable(10, 10)
@@ -476,8 +477,66 @@ class EditFile(QMainWindow):
         
         headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
         self.table_widget.setHorizontalHeaderLabels(headers)
+        self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table_widget.setSelectionMode(QAbstractItemView.SingleSelection)
         
         self.table_widget.open_sheet()
+    
+    """
+    Move selected row up one
+    """    
+    def up_triggered(self):
+        row = self.table_widget.currentRow()
+        colcount = self.table_widget.columnCount()
+        print(colcount)
+        print(row)
+        return
+                
+    """
+    Move selected row down one
+    """
+    def down_triggered(self):
+        return
+    
+    """
+    Save edit to Names.csv and add description to EditLog.txt
+    """
+    def submit_triggered(self):
+        desc = self.getDesc()
+        msgBox = QMessageBox()
+        msgBox.setText("Confirm edit")
+        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+        msgBox.setWindowTitle("Confirmation")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        
+        confirm = msgBox.exec_()
+        if confirm == QMessageBox.Ok:
+            with open(editfname, "a", newline="") as f:
+                f.write(desc + "\n\n")
+            rows = self.table_widget.getRows()
+            with open(fname, "w", newline="") as f:
+                w = writer(f)
+                w.writerows(rows)
+        
+        self.close()
+                
+    """
+    Close Window
+    """
+    def close_triggered(self):
+        self.close()
+                
+    """
+    Get user input for description of edit
+    """
+    def getDesc(self):
+        desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
+        if okPressed and desc != "":
+            return desc
+        else:
+            now = datetime.now()
+            now_str = now.strftime("%d/%m/%Y %H:%M:%S")
+            return "None Provided: " + now_str
         
          
 """
@@ -726,31 +785,24 @@ class HomeWindow(QMainWindow):
         #Create actions for menu buttons
         rank_action = QAction("Schedule Overtime", self)    
         newemp_action = QAction("Add New Employee", self)
-        edit_action = QAction("Editable", self)
-        submit_action = QAction("Submit Edit", self)
+        edit_action = QAction("Edit", self)
         quit_action = QAction("Quit", self)
         reset_action = QAction("Reset", self)
         view_action = QAction("View Logs", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
-        
-        #Create edit root menu
-        edit = bar.addMenu("Edit")
-        
+        bar.addAction(edit_action)
         bar.addAction(reset_action)
         bar.addAction(view_action)
         bar.addAction(quit_action)
-        edit.addAction(edit_action)
-        edit.addAction(newemp_action)
-        edit.addAction(submit_action)
+        
         
         #Connect menu buttons to functions
         quit_action.triggered.connect(self.quit_trigger)
         rank_action.triggered.connect(self.rank_triggered)
         newemp_action.triggered.connect(self.newemp_triggered)
         edit_action.triggered.connect(self.edit_triggered)
-        submit_action.triggered.connect(self.submit_triggered)
         reset_action.triggered.connect(self.reset_triggered)
         view_action.triggered.connect(self.view_triggered)
         
@@ -795,56 +847,7 @@ class HomeWindow(QMainWindow):
     Allow user to edit Names.csv
     """    
     def edit_triggered(self):
-        palette = QtGui.QPalette()
-        if not self.editable:
-            self.editable = True
-            self.table_widget.verticalHeader().setSectionsMovable(True)
-            self.table_widget.verticalHeader().setDragEnabled(True)
-            self.table_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-            self.table_widget.setEditTriggers(QAbstractItemView.DoubleClicked)
-            palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#72889E"))
-            palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#9E7272"))
-            app.setPalette(palette)
-        else:
-            self.editable = False
-            self.table_widget.verticalHeader().setSectionsMovable(False)
-            self.table_widget.verticalHeader().setDragEnabled(False)
-            self.table_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-            self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            self.table_widget.open_sheet()
-            palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
-            palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
-            app.setPalette(palette)
-
-    """
-    Save edit to Names.csv and add description to EditLog.txt
-    """
-    def submit_triggered(self):
-        desc = self.getDesc()
-        msgBox = QMessageBox()
-        msgBox.setText("Confirm edit")
-        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-        msgBox.setWindowTitle("Confirmation")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        
-        confirm = msgBox.exec_()
-        if confirm == QMessageBox.Ok:
-            with open(editfname, "a", newline="") as f:
-                f.write(desc + "\n\n")
-            rows = self.table_widget.getRows()
-            with open(fname, "w", newline="") as f:
-                w = writer(f)
-                w.writerows(rows)
-                
-        self.editable = False
-        self.table_widget.verticalHeader().setSectionsMovable(False)
-        self.table_widget.verticalHeader().setDragEnabled(False)
-        self.table_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-        self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table_widget.open_sheet()
-        palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
-        palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
-        app.setPalette(palette)        
+        editfile.show()     
         
     """
     When new employee button is clicked prompt the user to enter the id, name, and position of employee
@@ -923,15 +926,6 @@ class HomeWindow(QMainWindow):
             return position
         else:
             return None   
-  
-    def getDesc(self):
-        desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
-        if okPressed and desc != "":
-            return desc
-        else:
-            now = datetime.now()
-            now_str = now.strftime("%d/%m/%Y %H:%M:%S")
-            return "None Provided: " + now_str
               
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -945,6 +939,7 @@ if __name__ == "__main__":
     signup = SignUp()
     assign = AssignOvertime()
     view_logs = ViewLogs()
+    editfile = EditFile()
     
     sys.exit(app.exec_())
 
