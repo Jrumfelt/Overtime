@@ -7,7 +7,7 @@ Purpose: Determine Overtime position priority for Schenectady PD
 """
 import sys
 from csv import *
-import tempfile
+from datetime import datetime
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui
 import shutil
@@ -16,6 +16,7 @@ from tempfile import NamedTemporaryFile
 
 fname = "Names.csv"
 editfname = "EditLog.txt"
+logfname = "HireLog.txt"
 fields = ["id", "last","first","job","hired","hiredesc","previousposition"]
 unranked = []
 unrankedids = []
@@ -194,6 +195,30 @@ def confirmovertime(id, desc):
             writer.writerow(row)
     shutil.move(tempfile.name, fname)
     shiftlast(id)
+    
+"""
+Reset the Hired, Hired Description, and Previous Position from Names.csv
+"""
+def resetrank():
+    tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
+    with open(fname, "r") as csvfile, tempfile:
+        reader = DictReader(csvfile, fieldnames=fields)
+        writer = DictWriter(tempfile, fieldnames=fields)
+        for row in reader:
+            if row["hired"] == "Yes":
+                log(row)
+            row["hired"], row["hiredesc"], row["previousposition"] = "","",""
+            writer.writerow(row)    
+    shutil.move(tempfile.name, fname)
+    
+        
+"""
+Log the hire information to HireLog.txt from a given row
+"""
+def log(row):
+    logstr = row["id"] + ", " + row["last"] + ", " +  row["first"] + " : " + row["hiredesc"] + "\n\n"
+    with open(logfname, "a", newline="") as f_object:
+        f_object.write(logstr)
         
 """
 GUI classes and methods
@@ -266,7 +291,7 @@ class RankedTable(QTableWidget):
         rank(unrankedids)
         self.check_change = False
         self.setRowCount(0)
-        self.setColumnCount(3)
+        self.setColumnCount(6)
         column = 0
         for row_data in rankedlst:
             row = self.rowCount()
@@ -356,8 +381,66 @@ class EmployeeTable(QTableWidget):
                 else:
                     row_data.append("")
             rows.append(row_data)
-        return rows   
+        return rows
     
+"""
+Window showing edit and hire logs
+"""   
+class ViewLogs(QWidget):
+    def __init__(self):
+        super(ViewLogs, self).__init__()
+        
+        self.edit = QPlainTextEdit(self)
+        self.hire = QPlainTextEdit(self)
+        self.editlabel = QLabel(self)
+        self.hirelabel = QLabel(self)
+        
+        self.setWindowTitle("View Logs") 
+        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.resize(800, 600)
+        
+        self.init_ui()
+        
+    def init_ui(self):
+        outerlayout = QVBoxLayout()
+        labellayout = QHBoxLayout()
+        loglayout = QHBoxLayout()
+        
+        labellayout.addWidget(self.editlabel)
+        labellayout.addWidget(self.hirelabel)
+        
+        loglayout.addWidget(self.edit)
+        loglayout.addWidget(self.hire)
+        
+        outerlayout.addLayout(labellayout)
+        outerlayout.addLayout(loglayout)
+        
+        self.setLayout(outerlayout)
+        self.setWindowTitle("Logs")
+        
+        self.edit.setReadOnly(True)
+        self.hire.setReadOnly(True)
+        
+        self.edit.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.hire.setLineWrapMode(QPlainTextEdit.NoWrap)
+          
+        self.editlabel.setText("Edit Log")
+        self.hirelabel.setText("Hire Log")
+        
+        self.edit.setFont(QtGui.QFont("Times", 10))
+        self.hire.setFont(QtGui.QFont("Times", 10))
+        self.editlabel.setFont(QtGui.QFont("Arial", 20))
+        self.hirelabel.setFont(QtGui.QFont("Arial", 20))
+    
+        self.init_text()
+    
+    def init_text(self):
+        edit_text = open(editfname).read()
+        hire_text = open(logfname).read()
+        
+        self.edit.setPlainText(edit_text)
+        self.hire.setPlainText(hire_text)
+         
 """
 Window with table of ranked employees and form allowing user to assign employees for overtime
 """
@@ -607,6 +690,8 @@ class HomeWindow(QMainWindow):
         edit_action = QAction("Editable", self)
         submit_action = QAction("Submit Edit", self)
         quit_action = QAction("Quit", self)
+        reset_action = QAction("Reset", self)
+        view_action = QAction("View Logs", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
@@ -614,6 +699,8 @@ class HomeWindow(QMainWindow):
         #Create edit root menu
         edit = bar.addMenu("Edit")
         
+        bar.addAction(reset_action)
+        bar.addAction(view_action)
         bar.addAction(quit_action)
         edit.addAction(edit_action)
         edit.addAction(newemp_action)
@@ -625,6 +712,8 @@ class HomeWindow(QMainWindow):
         newemp_action.triggered.connect(self.newemp_triggered)
         edit_action.triggered.connect(self.edit_triggered)
         submit_action.triggered.connect(self.submit_triggered)
+        reset_action.triggered.connect(self.reset_triggered)
+        view_action.triggered.connect(self.view_triggered)
         
         #set up table
         self.form_widget = EmployeeTable(10, 10)
@@ -655,6 +744,13 @@ class HomeWindow(QMainWindow):
     """
     def rank_triggered(self):
         signup.show()
+        
+    """
+    Show ViewLogs window
+    """
+    def view_triggered(self):
+        view_logs.init_text()
+        view_logs.show()
      
     """
     Allow user to edit Names.csv
@@ -695,12 +791,22 @@ class HomeWindow(QMainWindow):
         confirm = msgBox.exec_()
         if confirm == QMessageBox.Ok:
             with open(editfname, "a", newline="") as f:
-                f.write(desc + "\n")
+                f.write(desc + "\n\n")
             rows = self.form_widget.getRows()
             with open(fname, "w", newline="") as f:
                 w = writer(f)
                 w.writerows(rows)
-    
+                
+        self.editable = False
+        self.form_widget.verticalHeader().setSectionsMovable(False)
+        self.form_widget.verticalHeader().setDragEnabled(False)
+        self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+        self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.form_widget.open_sheet()
+        palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
+        palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
+        app.setPalette(palette)        
+        
     """
     When new employee button is clicked prompt the user to enter the id, name, and position of employee
     On user confirmation that the information is correct add to Names.csv using newemployee() function
@@ -724,10 +830,30 @@ class HomeWindow(QMainWindow):
                             
                         confirm = msgBox.exec_()
                         if confirm == QMessageBox.Ok:
-                            all = d
-                            newemployee(uid, lastname, firstname, position)
-        self.form_widget.open_sheet() 
+                            all = viewall()
+                            if uid not in all:
+                                newemployee(uid, lastname, firstname, position)
+                            else:
+                                errdlg = QErrorMessage()
+                                errdlg.setWindowTitle("ERROR")
+                                errdlg.showMessage("ERROR: USER WITH ID: " + uid + " HAS ALREADY BEEN SIGNED UP")
+                                errdlg.exec_()
+        self.form_widget.open_sheet()
         
+    """
+    Clear Hired, Hired Description, and Previous Position from Names.csv
+    """ 
+    def reset_triggered(self):
+            msgBox = QMessageBox()
+            msgBox.setText("Confirm Rank Reset")
+            msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+            msgBox.setWindowTitle("Confirmation")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            confirm = msgBox.exec_()
+            if confirm == QMessageBox.Ok:
+                resetrank()   
+                self.form_widget.open_sheet()            
+                
     """
     Methods for getting employee information
     """
@@ -763,8 +889,11 @@ class HomeWindow(QMainWindow):
         desc, okPressed = QInputDialog.getText(self, "Get Reason","Reason and Description of Edit", QLineEdit.Normal, "")
         if okPressed and desc != "":
             return desc
-        return "None Provided"
-                
+        else:
+            now = datetime.now()
+            now_str = now.strftime("%d/%m/%Y %H:%M:%S")
+            return "None Provided: " + now_str
+              
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
@@ -776,6 +905,7 @@ if __name__ == "__main__":
     home = HomeWindow()
     signup = SignUp()
     assign = AssignOvertime()
+    view_logs = ViewLogs()
     
     sys.exit(app.exec_())
     
