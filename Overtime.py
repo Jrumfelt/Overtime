@@ -440,6 +440,45 @@ class ViewLogs(QWidget):
         
         self.edit.setPlainText(edit_text)
         self.hire.setPlainText(hire_text)
+
+"""
+Window for editing Names.csv
+"""
+class EditFile(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        
+        self.setWindowTitle("Overtime Ranks") 
+        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.resize(550, 400)
+        
+        #Create Menu Bar
+        bar = self.menuBar()
+        
+        #Create Actions
+        up_action = QAction("Move Up", self)
+        down_action = QAction("Move Down", self)
+        submit_action = QAction("Submit Edit", self)
+        
+        #Add actions to bar
+        bar.addAction(up_action)
+        bar.addAction(down_action)
+        bar.addAction(submit_action)
+        
+        #Connect actions to functions
+        up_action.triggered.connect(self.up_triggered)
+        down_action.triggered.connect(self.down_triggered)
+        submit_action.triggered.connect(self.submit_triggered)
+        
+        #Set up table
+        self.table_widget = EmployeeTable(10, 10)
+        self.setCentralWidget(self.table_widget)
+        
+        headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
+        self.table_widget.setHorizontalHeaderLabels(headers)
+        
+        self.table_widget.open_sheet()
+        
          
 """
 Window with table of ranked employees and form allowing user to assign employees for overtime
@@ -468,15 +507,15 @@ class AssignOvertime(QMainWindow):
         close_action.triggered.connect(self.close_triggered)
        
         #set up table
-        self.form_widget = RankedTable(10, 10)
-        self.setCentralWidget(self.form_widget)
-        self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_widget = RankedTable(10, 10)
+        self.setCentralWidget(self.table_widget)
+        self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
        
         headers = ["ID", "Last", "First", "Position", "8 Hour", "4 Hour"]
-        self.form_widget.setHorizontalHeaderLabels(headers)
+        self.table_widget.setHorizontalHeaderLabels(headers)
        
-        self.form_widget.setAlternatingRowColors(True)
-        self.form_widget.read_list()
+        self.table_widget.setAlternatingRowColors(True)
+        self.table_widget.read_list()
     
     """
     Methods for user input
@@ -520,7 +559,7 @@ class AssignOvertime(QMainWindow):
                 if i[0] == uid:
                     rankedlst.remove(i)
             confirmovertime(uid, desc)
-        self.form_widget.read_list()
+        self.table_widget.read_list()
     
     """
     Close Window
@@ -561,15 +600,15 @@ class SignUp(QMainWindow):
         close_action.triggered.connect(self.close_triggered)
         
         #set up table
-        self.form_widget = UnrankedTable(3,3)
-        self.setCentralWidget(self.form_widget)
-        self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_widget = UnrankedTable(3,3)
+        self.setCentralWidget(self.table_widget)
+        self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
         headers = ["ID", "Last","First","8 Hour", "4 Hour"]
-        self.form_widget.setHorizontalHeaderLabels(headers)
+        self.table_widget.setHorizontalHeaderLabels(headers)
         
-        self.form_widget.setAlternatingRowColors(True)
-        self.form_widget.read_list()
+        self.table_widget.setAlternatingRowColors(True)
+        self.table_widget.read_list()
      
     """
     Methods to get user input
@@ -597,7 +636,7 @@ class SignUp(QMainWindow):
 
     #Methods for when you press menu button
     """
-    Add user to list and update form_widget table
+    Add user to list and update table_widget table
     """
     def add_triggered(self):
         uid = self.getUID()
@@ -625,14 +664,14 @@ class SignUp(QMainWindow):
                     if confirm == QMessageBox.Ok:
                         unrankedids.append(uid)
                         unranked.append([uid, eightblock, fourblock])   
-        self.form_widget.read_list()
+        self.table_widget.read_list()
     
     """
     Calculate rank order with rank() and display new window where the user can assign employees to overtime
     """
     def calc_triggered(self):
         if len(unranked) >= 1:
-            assign.form_widget.read_list()
+            assign.table_widget.read_list()
             assign.show()
         else:
             errdlg = QErrorMessage()
@@ -656,7 +695,7 @@ class SignUp(QMainWindow):
                 if i[0] == uid:
                     unranked.remove(i)
                     unrankedids.remove(uid)
-            self.form_widget.read_list()
+            self.table_widget.read_list()
         else:
             errdlg = QErrorMessage()
             errdlg.setWindowTitle("ERROR")
@@ -716,16 +755,16 @@ class HomeWindow(QMainWindow):
         view_action.triggered.connect(self.view_triggered)
         
         #set up table
-        self.form_widget = EmployeeTable(10, 10)
-        self.setCentralWidget(self.form_widget)
-        self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_widget = EmployeeTable(10, 10)
+        self.setCentralWidget(self.table_widget)
+        self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
             
         headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
-        self.form_widget.setHorizontalHeaderLabels(headers)
+        self.table_widget.setHorizontalHeaderLabels(headers)
             
-        self.form_widget.setAlternatingRowColors(True)
+        self.table_widget.setAlternatingRowColors(True)
         
-        self.form_widget.open_sheet()
+        self.table_widget.open_sheet()
             
         #show window
         self.show()              
@@ -759,20 +798,20 @@ class HomeWindow(QMainWindow):
         palette = QtGui.QPalette()
         if not self.editable:
             self.editable = True
-            self.form_widget.verticalHeader().setSectionsMovable(True)
-            self.form_widget.verticalHeader().setDragEnabled(True)
-            self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-            self.form_widget.setEditTriggers(QAbstractItemView.DoubleClicked)
+            self.table_widget.verticalHeader().setSectionsMovable(True)
+            self.table_widget.verticalHeader().setDragEnabled(True)
+            self.table_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+            self.table_widget.setEditTriggers(QAbstractItemView.DoubleClicked)
             palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#72889E"))
             palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#9E7272"))
             app.setPalette(palette)
         else:
             self.editable = False
-            self.form_widget.verticalHeader().setSectionsMovable(False)
-            self.form_widget.verticalHeader().setDragEnabled(False)
-            self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-            self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            self.form_widget.open_sheet()
+            self.table_widget.verticalHeader().setSectionsMovable(False)
+            self.table_widget.verticalHeader().setDragEnabled(False)
+            self.table_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+            self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.table_widget.open_sheet()
             palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
             palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
             app.setPalette(palette)
@@ -792,17 +831,17 @@ class HomeWindow(QMainWindow):
         if confirm == QMessageBox.Ok:
             with open(editfname, "a", newline="") as f:
                 f.write(desc + "\n\n")
-            rows = self.form_widget.getRows()
+            rows = self.table_widget.getRows()
             with open(fname, "w", newline="") as f:
                 w = writer(f)
                 w.writerows(rows)
                 
         self.editable = False
-        self.form_widget.verticalHeader().setSectionsMovable(False)
-        self.form_widget.verticalHeader().setDragEnabled(False)
-        self.form_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
-        self.form_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.form_widget.open_sheet()
+        self.table_widget.verticalHeader().setSectionsMovable(False)
+        self.table_widget.verticalHeader().setDragEnabled(False)
+        self.table_widget.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+        self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_widget.open_sheet()
         palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
         palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor("#E0E0E0"))
         app.setPalette(palette)        
@@ -838,7 +877,7 @@ class HomeWindow(QMainWindow):
                                 errdlg.setWindowTitle("ERROR")
                                 errdlg.showMessage("ERROR: USER WITH ID: " + uid + " HAS ALREADY BEEN SIGNED UP")
                                 errdlg.exec_()
-        self.form_widget.open_sheet()
+        self.table_widget.open_sheet()
         
     """
     Clear Hired, Hired Description, and Previous Position from Names.csv
@@ -852,7 +891,7 @@ class HomeWindow(QMainWindow):
             confirm = msgBox.exec_()
             if confirm == QMessageBox.Ok:
                 resetrank()   
-                self.form_widget.open_sheet()            
+                self.table_widget.open_sheet()            
                 
     """
     Methods for getting employee information
@@ -908,4 +947,4 @@ if __name__ == "__main__":
     view_logs = ViewLogs()
     
     sys.exit(app.exec_())
-    
+
