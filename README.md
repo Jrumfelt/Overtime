@@ -24,7 +24,6 @@
 * [About the Project](#about-the-project)
 * [Demo](#Demo)
 * [Installation](#installation)
-* [Setup](#setup)
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
