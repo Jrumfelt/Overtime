@@ -1,7 +1,7 @@
 <br />
 <p align="center">
-  <a href="https://github.com/Jrumfelt/Overtime/Images/Icon.jpg">
-    <img src="Icon.jpg" alt="Logo" width="80" height="80">
+  <a href="https://github.com/Jrumfelt/Overtime">
+    <img src="Images/Icon.jpg" alt="Icon" width="80" height="80">
   </a>
 
   <h3 align="center">Schenectady Police Department Overtime</h3>
