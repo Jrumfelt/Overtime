@@ -5,7 +5,7 @@ Email: jrumfelt1213@gmail.com
 Phone: (518)414-1483
 Purpose: Determine Overtime position priority for Schenectady PD
 """
-from os import close
+from functools import cmp_to_key
 import sys
 from csv import *
 from datetime import datetime
@@ -19,9 +19,9 @@ fname = "Names.csv"
 editfname = "EditLog.txt"
 logfname = "HireLog.txt"
 fields = ["id", "last","first","job","hired","hiredesc","previousposition"]
+jobs = ["FSB PTL", "ISB DET", "ASB PTL", "FSB SGT", "ISB SGT", "ASB SGT", "FSB LT", "ISB LT", "ASB LT"]
 unranked = []
 unrankedids = []
-rankedlst = []
 
 """
 Opens csv file in append mode and adds a new employee using file and writer object
@@ -46,8 +46,8 @@ def viewall():
                 break
             dicttemp = {
                         "id" : line[0],
-                        "first" : line[1], 
-                        "last" : line[2],
+                        "last" : line[1], 
+                        "first" : line[2],
                         "job" : line[3],
                         "hired" : line[4],
                         "hiredreason": line[5],
@@ -58,108 +58,25 @@ def viewall():
     return dictall
 
 """
+Custom comparator to sort list by job and position
+"""
+def job_comparator(lhs, rhs):
+    #Compare based on job
+    comp = (jobs.index(lhs[3]) > jobs.index(rhs[3])) - (jobs.index(lhs[3]) < jobs.index(rhs[3]))
+    if comp == 0:
+        #Compare based on list position if job is the same
+        comp = (lhs[6] > rhs[6]) - (lhs[6] < rhs[6])
+    return comp
+"""
 Takes a list of employee IDs and calculates their overtime priority rank based on who is higher in Names.csv and job position.
 Appends rankedlst
 """
-def rank(ids):
-    #dictionaries of all the positions
-    fsbptl = []
-    fsbsgt = []
-    fsblt = []
-    isbdet = []
-    isbsgt = []
-    isblt = []
-    asbptl = []
-    asbsgt = []
-    asblt = []
-    dictall = viewall()
-    #Place in the correct dictionary if it is one of the given ids
-    for key, value in dictall.items():
-        if key in ids:
-            templst = []
-            if value["job"] == "FSB PTL":
-                for v2 in value.values():
-                    templst.append(v2)
-                fsbptl.append(templst)
-            elif value["job"] == "ISB DET":
-                for v2 in value.values():
-                    templst.append(v2)
-                isbdet.append(templst)
-            elif value["job"] == "ASB PTL":
-                for v2 in value.values():
-                    templst.append(v2)
-                asbptl.append(templst)
-            elif value["job"] == "FSB SGT":
-                for v2 in value.values():
-                    templst.append(v2)
-                fsbsgt.append(templst)
-            elif value["job"] == "ISB SGT":
-                for v2 in value.values():
-                    templst.append(v2)
-                isbsgt.append(templst)
-            elif value["job"] == "ASB SGT":
-                for v2 in value.values():
-                    templst.append(v2)
-                asbsgt.append(templst)
-            elif value["job"] == "FSB LT":
-                for v2 in value.values():
-                    templst.append(v2)
-                fsblt.append(templst)
-            elif value["job"] == "ISB LT":
-                for v2 in value.values():
-                    templst.append(v2)
-                isblt.append(templst)
-            elif value["job"] == "ASB LT":
-                for v2 in value.values():
-                    templst.append(v2)
-                asblt.append(templst)
-    rank = 0
-    #Assign rank based on the priority
-    for i in fsbptl:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in isbdet:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in asbptl:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in fsbsgt:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in isbsgt:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in asbsgt:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in fsblt:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in isblt:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
-    for i in asblt:
-        rank += 1
-        i[5] = rank
-        if i not in rankedlst:
-            rankedlst.append(i)
+def rank(unranked):
+    if len(unranked) > 1:
+        rankedlst = sorted(unranked, key = cmp_to_key(job_comparator))
+    else:
+        rankedlst = unranked
+    return rankedlst
 
 """
 Shift row to bottom of csv to reset their rank priority 
@@ -184,16 +101,17 @@ Confirm employee up for overtime
 """
 def confirmovertime(id, desc):
     tempfile = NamedTemporaryFile(mode="w", delete=False, newline="")
+    count = 1
     with open(fname, "r") as csvfile, tempfile:
         reader = DictReader(csvfile, fieldnames=fields)
         writer = DictWriter(tempfile, fieldnames=fields)
         for row in reader:
             if row["id"] == id:
                 row["hired"] = "Yes" 
-                row["8hours"] = "" 
-                row["4hours"] = ""
                 row["hiredesc"] = desc
+                row["previousposition"] = count
             writer.writerow(row)
+            count += 1
     shutil.move(tempfile.name, fname)
     shiftlast(id)
     
@@ -289,7 +207,7 @@ class RankedTable(QTableWidget):
             value = value.text()
     
     def read_list(self):
-        rank(unrankedids)
+        rankedlst = rank(unranked)
         self.check_change = False
         self.setRowCount(0)
         self.setColumnCount(6)
@@ -326,7 +244,7 @@ class UnrankedTable(QTableWidget):
     def read_list(self):
         self.check_change = False
         self.setRowCount(0)
-        self.setColumnCount(5)
+        self.setColumnCount(6)
         column = 0
         for row_data in unranked:
             row = self.rowCount()
@@ -347,15 +265,7 @@ class EmployeeTable(QTableWidget):
         self.init_ui()
         
     def init_ui(self):
-        self.cellChanged.connect(self.c_current)
         self.show()
-        
-    def c_current(self):
-        if self.check_change:
-            row = self.currentRow()
-            col = self.currentColumn()
-            value = self.item(row, col)
-            value = value.text()
     
     def open_sheet(self):
         self.check_change = False
@@ -398,7 +308,7 @@ class ViewLogs(QWidget):
         
         self.setWindowTitle("View Logs") 
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(800, 600)
+        self.resize(900, 700)
         
         self.init_ui()
         
@@ -488,42 +398,60 @@ class EditFile(QMainWindow):
     def up_triggered(self):
         row = self.table_widget.currentRow()
         colcount = self.table_widget.columnCount()
-        print(colcount)
-        print(row)
-        return
+        col = 0
+        if row > 0:
+            self.table_widget.insertRow(row - 1)
+            while col < colcount:
+                self.table_widget.setItem(row - 1, col, self.table_widget.takeItem(row + 1, col))
+                col += 1
+            self.table_widget.removeRow(row + 1)
+        self.table_widget.selectRow(row - 1)
                 
     """
     Move selected row down one
     """
     def down_triggered(self):
-        return
+        row = self.table_widget.currentRow()
+        colcount = self.table_widget.columnCount()
+        rowcount = self.table_widget.rowCount()
+        col = 0
+        if row < rowcount - 1:
+            self.table_widget.insertRow(row + 2)
+            while col < colcount:
+                self.table_widget.setItem(row + 2, col, self.table_widget.takeItem(row, col))
+                col += 1
+            self.table_widget.removeRow(row)
+        self.table_widget.selectRow(row + 1)
     
     """
     Save edit to Names.csv and add description to EditLog.txt
     """
     def submit_triggered(self):
         desc = self.getDesc()
-        msgBox = QMessageBox()
-        msgBox.setText("Confirm edit")
-        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-        msgBox.setWindowTitle("Confirmation")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        
-        confirm = msgBox.exec_()
-        if confirm == QMessageBox.Ok:
-            with open(editfname, "a", newline="") as f:
-                f.write(desc + "\n\n")
-            rows = self.table_widget.getRows()
-            with open(fname, "w", newline="") as f:
-                w = writer(f)
-                w.writerows(rows)
-        
-        self.close()
+        if desc:
+            msgBox = QMessageBox()
+            msgBox.setText("Confirm edit")
+            msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+            msgBox.setWindowTitle("Confirmation")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            
+            confirm = msgBox.exec_()
+            if confirm == QMessageBox.Ok:
+                now = datetime.now()
+                nowstr = now.strftime("%m/%d/%Y %H:%M:%S")
+                with open(editfname, "a", newline="") as f:
+                    f.write(nowstr + " " + desc + "\n\n")
+                rows = self.table_widget.getRows()
+                with open(fname, "w", newline="") as f:
+                    w = writer(f)
+                    w.writerows(rows)
+        self.table_widget.open_sheet()  
                 
     """
     Close Window
     """
     def close_triggered(self):
+        home.table_widget.open_sheet()
         self.close()
                 
     """
@@ -534,9 +462,7 @@ class EditFile(QMainWindow):
         if okPressed and desc != "":
             return desc
         else:
-            now = datetime.now()
-            now_str = now.strftime("%d/%m/%Y %H:%M:%S")
-            return "None Provided: " + now_str
+            return None
         
          
 """
@@ -548,7 +474,7 @@ class AssignOvertime(QMainWindow):
        
         self.setWindowTitle("Overtime Ranks") 
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(550, 400)
+        self.resize(650, 400)
        
         #Create menu bar
         assignbar = self.menuBar()
@@ -570,7 +496,7 @@ class AssignOvertime(QMainWindow):
         self.setCentralWidget(self.table_widget)
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
        
-        headers = ["ID", "Last", "First", "Position", "8 Hour", "4 Hour"]
+        headers = ["ID", "Last", "First", "Position", "8 Hour Block", "4 Hour Block"]
         self.table_widget.setHorizontalHeaderLabels(headers)
        
         self.table_widget.setAlternatingRowColors(True)
@@ -583,42 +509,46 @@ class AssignOvertime(QMainWindow):
         uid, okPressed = QInputDialog.getText(self, "Get ID","Employee ID", QLineEdit.Normal, "")
         if okPressed and uid != "":
             return uid
-        return None
+        else:
+            return None
     
     def getDesc(self):
         desc, okPressed = QInputDialog.getText(self, "Get Hire Description","Hire Description", QLineEdit.Normal, "")
         if okPressed and desc != "":
             return desc
-        return None
+        else:
+            return None
     
     """
     Hire user specified employee
     """
     def hire_triggered(self):
         uid = self.getUID()
-        while uid not in unrankedids and uid:
-            errdlg = QErrorMessage()
-            errdlg.setWindowTitle("ERROR")
-            errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been signed up")
-            errdlg.exec_()
-            uid = self.getUID()
-        desc = self.getDesc()
-        msgBox = QMessageBox()
-        msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + "\nDescription:    " + desc)
-        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
-        msgBox.setWindowTitle("Confirmation")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        confirm = msgBox.exec_()
-        if confirm == QMessageBox.Ok:
-            for i in unranked:
-                if i[0] == uid:
-                    unranked.remove(i)
-                    unrankedids.remove(uid)
-            for i in rankedlst:
-                if i[0] == uid:
-                    rankedlst.remove(i)
-            confirmovertime(uid, desc)
+        if uid:
+            while uid not in unrankedids and uid:
+                errdlg = QErrorMessage()
+                errdlg.setWindowTitle("ERROR")
+                errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been signed up")
+                errdlg.exec_()
+                uid = self.getUID()
+            desc = self.getDesc()
+            if desc:
+                msgBox = QMessageBox()
+                msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + "\nDescription:    " + desc)
+                msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                msgBox.setWindowTitle("Confirmation")
+                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                confirm = msgBox.exec_()
+                if confirm == QMessageBox.Ok:
+                    for i in unranked:
+                        if i[0] == uid:
+                            unranked.remove(i)
+                            unrankedids.remove(uid)
+                    confirmovertime(uid, desc)
         self.table_widget.read_list()
+        home.table_widget.open_sheet()
+        signup.table_widget.read_list()
+        
     
     """
     Close Window
@@ -635,7 +565,7 @@ class SignUp(QMainWindow):
         
         self.setWindowTitle("Overtime Sign Up")
         self.setWindowIcon(QtGui.QIcon("Icon"))
-        self.resize(450, 400)
+        self.resize(650, 400)
         
         #create menu bar
         assignbar = self.menuBar()
@@ -659,11 +589,11 @@ class SignUp(QMainWindow):
         close_action.triggered.connect(self.close_triggered)
         
         #set up table
-        self.table_widget = UnrankedTable(3,3)
+        self.table_widget = UnrankedTable(10,10)
         self.setCentralWidget(self.table_widget)
         self.table_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
-        headers = ["ID", "Last","First","8 Hour", "4 Hour"]
+        headers = ["ID", "Last", "First", "Job", "8 Hour Block", "4 Hour Block"]
         self.table_widget.setHorizontalHeaderLabels(headers)
         
         self.table_widget.setAlternatingRowColors(True)
@@ -683,7 +613,7 @@ class SignUp(QMainWindow):
         eightblock, okPressed = QInputDialog.getItem(self, "Get Eight Hour Block", "Eight Hour Block", eightblocks, 0, False)
         if okPressed and eightblock:
             return eightblock
-        return None           
+        return None          
     
     def getFourBlock(self):
         fourblocks = ("N/A","0-4","4-8","8-12","12-4","16-20","20-24","0-8","8-16","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
@@ -721,8 +651,12 @@ class SignUp(QMainWindow):
                     
                     confirm = msgBox.exec_()
                     if confirm == QMessageBox.Ok:
+                        pos = list(dictall.keys()).index(uid)
+                        last = dictall[uid]["last"]
+                        first = dictall[uid]["first"]
+                        job = dictall[uid]["job"]
                         unrankedids.append(uid)
-                        unranked.append([uid, eightblock, fourblock])   
+                        unranked.append([uid, last, first, job, eightblock, fourblock, pos])
         self.table_widget.read_list()
     
     """
@@ -795,6 +729,7 @@ class HomeWindow(QMainWindow):
         bar.addAction(edit_action)
         bar.addAction(reset_action)
         bar.addAction(view_action)
+        bar.addAction(newemp_action)
         bar.addAction(quit_action)
         
         
@@ -875,6 +810,11 @@ class HomeWindow(QMainWindow):
                             all = viewall()
                             if uid not in all:
                                 newemployee(uid, lastname, firstname, position)
+                                now = datetime.now()
+                                nowstr = now.strftime("%m/%d/%Y %H:%M:%S")
+                                desc = "New employee added: " + uid + ", " + lastname + ", " + firstname + ", " + position
+                                with open(editfname, "a", newline="") as f:
+                                    f.write(nowstr + " " + desc + "\n\n")
                             else:
                                 errdlg = QErrorMessage()
                                 errdlg.setWindowTitle("ERROR")
@@ -920,12 +860,12 @@ class HomeWindow(QMainWindow):
             return None
        
     def getPosition(self):
-        positions = ("FSB PTL", "FSB SGT", "FSB LT", "ISB PTL", "ISB SGT", "ISB LT", "ASB PTL", "ASB SGT", "ASB LT")
+        positions = ("FSB PTL", "FSB SGT", "FSB LT", "ISB DET", "ISB SGT", "ISB LT", "ASB PTL", "ASB SGT", "ASB LT")
         position, okPressed = QInputDialog.getItem(self, "Get Position", "Employee Position", positions, 0, False)
         if okPressed and position:
             return position
         else:
-            return None   
+            return None
               
 if __name__ == "__main__":
     app = QApplication(sys.argv)
