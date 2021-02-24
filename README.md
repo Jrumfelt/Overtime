@@ -10,7 +10,7 @@
     Track and Hire Overtime 
     <br />
     <br />
-    <a href="https://github.com/Jrumfelt/Overtime">INSTALLATION INSTRUCTIONS</b></a>
+    <a href="#installation">INSTALLATION INSTRUCTIONS</b></a>
     ·
     <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
     ·
@@ -18,10 +18,21 @@
   </p>
 </p>
 
+<!-- TABLE OF CONTENTS -->
+## Table of Contents
+
+* [About the Project](#about-the-project)
+* [Demo](#Demo)
+* [Installation](#installation)
+* [Setup](#setup)
+
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project was developed for the Schenectady Police Department to make tracking and hiring overtime an easier and more efficient process. 
+This project was developed for the Schenectady Police Department to make tracking and hiring overtime an easier and more efficient process.
+
+## Demo
+
 
 ## Installation
 
