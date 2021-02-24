@@ -15,9 +15,10 @@ import shutil
 from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
 
-fname = "Names.csv"
-editfname = "EditLog.txt"
-logfname = "HireLog.txt"
+fname = "Files/Names.csv"
+editfname = "Files/EditLog.txt"
+logfname = "Files/HireLog.txt"
+icon = "Images/Icon.jpg"
 fields = ["id", "last","first","job","hired","hiredesc","previousposition"]
 jobs = ["FSB PTL", "ISB DET", "ASB PTL", "FSB SGT", "ISB SGT", "ASB SGT", "FSB LT", "ISB LT", "ASB LT"]
 unranked = []
@@ -307,7 +308,7 @@ class ViewLogs(QWidget):
         self.hirelabel = QLabel(self)
         
         self.setWindowTitle("View Logs") 
-        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.setWindowIcon(QtGui.QIcon(icon))
         self.resize(900, 700)
         
         self.init_ui()
@@ -357,7 +358,7 @@ class EditFile(QMainWindow):
         super().__init__()
         
         self.setWindowTitle("Overtime Ranks") 
-        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.setWindowIcon(QtGui.QIcon(icon))
         self.resize(800, 600)
         
         #Create Menu Bar
@@ -431,7 +432,7 @@ class EditFile(QMainWindow):
         if desc:
             msgBox = QMessageBox()
             msgBox.setText("Confirm edit")
-            msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+            msgBox.setWindowIcon(QtGui.QIcon(icon))
             msgBox.setWindowTitle("Confirmation")
             msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             
@@ -473,7 +474,7 @@ class AssignOvertime(QMainWindow):
         super().__init__()
        
         self.setWindowTitle("Overtime Ranks") 
-        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.setWindowIcon(QtGui.QIcon(icon))
         self.resize(650, 400)
        
         #Create menu bar
@@ -535,7 +536,7 @@ class AssignOvertime(QMainWindow):
             if desc:
                 msgBox = QMessageBox()
                 msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + "\nDescription:    " + desc)
-                msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                msgBox.setWindowIcon(QtGui.QIcon(icon))
                 msgBox.setWindowTitle("Confirmation")
                 msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                 confirm = msgBox.exec_()
@@ -564,7 +565,7 @@ class SignUp(QMainWindow):
         super().__init__()
         
         self.setWindowTitle("Overtime Sign Up")
-        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.setWindowIcon(QtGui.QIcon(icon))
         self.resize(650, 400)
         
         #create menu bar
@@ -645,7 +646,7 @@ class SignUp(QMainWindow):
                     msgBox = QMessageBox()
                     msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
                         "\nEight Hour Block:    " + eightblock + "\nFour Hour Block:    " + fourblock)
-                    msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                    msgBox.setWindowIcon(QtGui.QIcon(icon))
                     msgBox.setWindowTitle("Confirmation")
                     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                     
@@ -710,7 +711,7 @@ class HomeWindow(QMainWindow):
             
         self.editable = False
         self.setWindowTitle("Overtime Priority")
-        self.setWindowIcon(QtGui.QIcon("Icon"))
+        self.setWindowIcon(QtGui.QIcon(icon))
         self.resize(800, 600)
         
         #create menu bar
@@ -801,7 +802,7 @@ class HomeWindow(QMainWindow):
                         msgBox = QMessageBox()
                         msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + \
                             "\nEmployee Name:    " + lastname + " " + firstname + "\nEmployee Position:    " + position)
-                        msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+                        msgBox.setWindowIcon(QtGui.QIcon(icon))
                         msgBox.setWindowTitle("Confirmation")
                         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
                             
@@ -828,7 +829,7 @@ class HomeWindow(QMainWindow):
     def reset_triggered(self):
             msgBox = QMessageBox()
             msgBox.setText("Confirm Rank Reset")
-            msgBox.setWindowIcon(QtGui.QIcon("Icon"))
+            msgBox.setWindowIcon(QtGui.QIcon(icon))
             msgBox.setWindowTitle("Confirmation")
             msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             confirm = msgBox.exec_()
