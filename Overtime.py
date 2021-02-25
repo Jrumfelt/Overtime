@@ -387,6 +387,8 @@ class EditFile(QMainWindow):
         self.setCentralWidget(self.table_widget)
         
         headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
+        
+        self.table_widget.setAlternatingRowColors(True)
         self.table_widget.setHorizontalHeaderLabels(headers)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table_widget.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -464,8 +466,7 @@ class EditFile(QMainWindow):
             return desc
         else:
             return None
-        
-         
+            
 """
 Window with table of ranked employees and form allowing user to assign employees for overtime
 """
@@ -871,6 +872,7 @@ class HomeWindow(QMainWindow):
               
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    
     app.setStyle('Fusion')
     palette = QtGui.QPalette()
     palette.setColor(QtGui.QPalette.Base, QtGui.QColor("#FFFFFF"))
