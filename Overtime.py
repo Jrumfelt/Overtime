@@ -617,8 +617,13 @@ class SignUp(QMainWindow):
             return eightblock
         return None          
     
-    def getFourBlock(self):
-        fourblocks = ("N/A","0-4","4-8","0-8","8-12","12-16","8-16","16-20","20-24","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
+    def getFourBlock(self, eightblock):
+        if eightblock == "0-8":
+            fourblocks = ("N/A", "0-4", "4-8", "0-8")
+        elif eightblock == "8-16":
+            fourblocks = ("N/A", "8-12", "12-16", "8-16")
+        elif eightblock == "16-24":
+            fourblocks = ("N/A", "16-20", "20-24", "16-24")
         fourblock, okPressed = QInputDialog.getItem(self, "Get Four Hour Block", "Four Hour Block", fourblocks, 0, False)
         if okPressed and fourblock:
             return fourblock
@@ -641,7 +646,7 @@ class SignUp(QMainWindow):
         if uid:
             eightblock = self.getEightBlock()
             if eightblock:
-                fourblock = self.getFourBlock()
+                fourblock = self.getFourBlock(eightblock)
                 if fourblock:
                     #Confirmation Window
                     msgBox = QMessageBox()
