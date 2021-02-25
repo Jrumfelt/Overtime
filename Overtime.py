@@ -617,7 +617,7 @@ class SignUp(QMainWindow):
         return None          
     
     def getFourBlock(self):
-        fourblocks = ("N/A","0-4","4-8","8-12","12-4","16-20","20-24","0-8","8-16","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
+        fourblocks = ("N/A","0-4","4-8","0-8","8-12","12-16","8-16","16-20","20-24","16-24")    #Could change so that it only shows whats relavant to the eight hour blocks
         fourblock, okPressed = QInputDialog.getItem(self, "Get Four Hour Block", "Four Hour Block", fourblocks, 0, False)
         if okPressed and fourblock:
             return fourblock
@@ -783,6 +783,7 @@ class HomeWindow(QMainWindow):
     Allow user to edit Names.csv
     """    
     def edit_triggered(self):
+        editfile.table_widget.open_sheet()
         editfile.show()     
         
     """
