@@ -98,7 +98,7 @@ Dowload the latest version from [releases](https://github.com/Jrumfelt/Overtime/
 
 You only need to follow the below instructions if you are attempting to modify this software. Otherwise, please download the latest version from the [releases](https://github.com/Jrumfelt/Overtime/releases)
 
-The only prerequisite neeeded to use this software is [Python](https://www.python.ord/downloads/)
+The only prerequisite neeeded to use this software is [Python](https://www.python.org/downloads/)
 
 To setup Clone the repo
 ```sh
