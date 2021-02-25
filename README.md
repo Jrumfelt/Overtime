@@ -25,13 +25,9 @@
 - [About The Project](#about-the-project)
 - [Demo](#demo)
   - [Home Window](#home-window)
-    - [Menu Bar Buttons](#menu-bar-buttons)
   - [Overtime Sign Up](#overtime-sign-up)
-    - [Menu Bar BUttons](#menu-bar-buttons-1)
   - [Overtime Ranks](#overtime-ranks)
-    - [Menu Bar Buttons](#menu-bar-buttons-2)
   - [Edit](#edit)
-    - [Menu Bar Buttons](#menu-bar-buttons-3)
   - [Logs](#logs)
 - [Installation](#installation)
 - [Developement](#developement)
@@ -43,6 +39,7 @@
 This project was developed for the Schenectady Police Department to make tracking and hiring overtime an easier and more efficient process.
 
 ## Demo
+
 ### Home Window
 
 Table showing all employees and whether they are hired
@@ -50,8 +47,6 @@ Table showing all employees and whether they are hired
 <p align="center">
   <img src="Images/Home Screen.PNG" width="800" height="500">
 </p>
-
-#### Menu Bar Buttons
 
 Schedule Overime - Opens a window that allows user to sign employees up for overtime and then calculate priority.<br>
 Edit - Opens a window for editing the employee table. Used to change details in the employee table, such as name, id, hire descriptions, etc. Useful when an employee cancels overtime and needs to be moved back to their previous position.<br>
@@ -66,8 +61,6 @@ Quit - Quit and close the application.<br>
   <img src="Images/Sign Up.PNG" width="800" height="400">
 </p>
 
-#### Menu Bar BUttons
-
 Add Employee - Used to sign an employee up for an overtime block.<br>
 Calculate Overtime - Will calculate the priority rank of each signed up employee.<br>
 Withdraw Employee - Used to remove a signed up employee.<br>
@@ -79,8 +72,6 @@ Close - Close the Sign Up window.<br>
   <img src="Images/Hire.PNG" width="800" height="400">
 </p>
 
-#### Menu Bar Buttons
-
 Hire - Used to hire a ranked employee. <br>
 Close - Close the Overtime Ranks window.<br>
 
@@ -88,8 +79,6 @@ Close - Close the Overtime Ranks window.<br>
 <p align="center">
   <img src="Images/Edit.PNG"  width="800" height="500">
 </p>
-
-#### Menu Bar Buttons
 
 Move Up - Moves selected row up one position.<br>
 Move Down - Moves selected row down one position.<br>
@@ -109,15 +98,12 @@ Dowload the latest version from [releases](https://github.com/Jrumfelt/Overtime/
 
 You only need to follow the below instructions if you are attempting to modify this software. Otherwise, please download the latest version from the [releases](https://github.com/Jrumfelt/Overtime/releases)
 
-The only prerequisite neeeded to use this software is[Python](https://www.python.ord/downloads/)
+The only prerequisite neeeded to use this software is [Python](https://www.python.ord/downloads/)
 
 To setup Clone the repo
 ```sh
 git clone https://github.com/Jrumfelt/Overtime.git
-cd Overtime
 ```
-
-
 
 ## Contact
 Joseph Rumfelt
