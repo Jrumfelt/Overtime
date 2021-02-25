@@ -92,7 +92,7 @@ Table showing all employees and whether they are hired
 
 ## Installation
 
-Dowload the latest version from [releases](https://github.com/Jrumfelt/Overtime/releases)
+Dowload the latest version from [releases](https://github.com/Jrumfelt/Overtime/releases)<br>
 Extract from zip file and run Overtime.exe in SPDOvertime\exe.win-amd64-3.9
 
 ## Developement
