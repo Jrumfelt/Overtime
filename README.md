@@ -48,12 +48,12 @@ Table showing all employees and whether they are hired
   <img src="Images/Home Screen.PNG" width="800" height="500">
 </p>
 
-Schedule Overime - Opens a window that allows user to sign employees up for overtime and then calculate priority.<br>
-Edit - Opens a window for editing the employee table. Used to change details in the employee table, such as name, id, hire descriptions, etc. Useful when an employee cancels overtime and needs to be moved back to their previous position.<br>
-Reset - Used to reset the table after the current overtime block is complete. This will add relevant information to the hired log as well as clear the hired, hired position, and previous position columns for all hired employees.<br>
-View Logs - Opens window with logs showing all previous overtime hires and descriptions for all previous edits.<br>
-Add New Employee - Used to add a new employee to the overtime software database.<br>
-Quit - Quit and close the application.<br>
+<b>Schedule Overime</b> - Opens a window that allows user to sign employees up for overtime and then calculate priority.<br>
+<b>Edit</b> - Opens a window for editing the employee table. Used to change details in the employee table, such as name, id, hire descriptions, etc. Useful when an employee cancels overtime and needs to be moved back to their previous position.<br>
+<b>Reset</b> - Used to reset the table after the current overtime block is complete. This will add relevant information to the hired log as well as clear the hired, hired position, and previous position columns for all hired employees.<br>
+<b>View Logs</b> - Opens window with logs showing all previous overtime hires and descriptions for all previous edits.<br>
+<b>Add New Employee</b> - Used to add a new employee to the overtime software database.<br>
+<b>Quit</b> - Quit and close the application.<br>
 
 ### Overtime Sign Up
 
@@ -61,10 +61,10 @@ Quit - Quit and close the application.<br>
   <img src="Images/Sign Up.PNG" width="800" height="400">
 </p>
 
-Add Employee - Used to sign an employee up for an overtime block.<br>
-Calculate Overtime - Will calculate the priority rank of each signed up employee.<br>
-Withdraw Employee - Used to remove a signed up employee.<br>
-Close - Close the Sign Up window.<br>
+<b>Add Employee</b> - Used to sign an employee up for an overtime block.<br>
+<b>Calculate Overtime</b> - Will calculate the priority rank of each signed up employee.<br>
+<b>Withdraw Employee</b> - Used to remove a signed up employee.<br>
+<b>Close</b> - Close the Sign Up window.<br>
 
 ### Overtime Ranks
 
@@ -72,18 +72,18 @@ Close - Close the Sign Up window.<br>
   <img src="Images/Hire.PNG" width="800" height="400">
 </p>
 
-Hire - Used to hire a ranked employee. <br>
-Close - Close the Overtime Ranks window.<br>
+<b>Hire</b> - Used to hire a ranked employee. <br>
+<b>Close</b> - Close the Overtime Ranks window.<br>
 
 ### Edit 
 <p align="center">
   <img src="Images/Edit.PNG"  width="800" height="500">
 </p>
 
-Move Up - Moves selected row up one position.<br>
-Move Down - Moves selected row down one position.<br>
-Submit Edit - Save and submit the edits.<br>
-Close - Close the window.<br>
+<b>Move Up</b> - Moves selected row up one position.<br>
+<b>Move Down</b> - Moves selected row down one position.<br>
+<b>Submit Edit</b> - Save and submit the edits.<br>
+<b>Close</b> - Close the window.<br>
 
 ### Logs
 <p align="center">
