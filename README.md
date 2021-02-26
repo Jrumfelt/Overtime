@@ -12,9 +12,9 @@
     <br />
     <a href="#installation">INSTALLATION INSTRUCTIONS</b></a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
+    <a href="https://github.com/Jrumfelt/Overtime/issues">Report Bug</a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Request Feature</a>
+    <a href="https://github.com/Jrumfelt/Overtime/issues">Request Feature</a>
   </p>
 </p>
 
