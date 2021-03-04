@@ -367,18 +367,21 @@ class EditFile(QMainWindow):
         #Create Actions
         up_action = QAction("Move Up", self)
         down_action = QAction("Move Down", self)
+        delete_action = QAction("Delete Row", self)
         submit_action = QAction("Submit Edit", self)
         close_action = QAction("Close", self)
         
         #Add actions to bar
         bar.addAction(up_action)
         bar.addAction(down_action)
+        bar.addAction(delete_action)
         bar.addAction(submit_action)
         bar.addAction(close_action)
         
         #Connect actions to functions
         up_action.triggered.connect(self.up_triggered)
         down_action.triggered.connect(self.down_triggered)
+        delete_action.triggered.connect(self.delete_triggered)
         submit_action.triggered.connect(self.submit_triggered)
         close_action.triggered.connect(self.close_triggered)
         
@@ -425,6 +428,13 @@ class EditFile(QMainWindow):
                 col += 1
             self.table_widget.removeRow(row)
         self.table_widget.selectRow(row + 1)
+        
+    """
+    Delete selected row
+    """
+    def delete_triggered(self):
+        row = self.table_widget.currentRow()
+        self.table_widget.removeRow(row)
     
     """
     Save edit to Names.csv and add description to EditLog.txt
@@ -520,33 +530,77 @@ class AssignOvertime(QMainWindow):
             return desc
         else:
             return None
+        
+    def getLast(self):
+        last, okPressed = QInputDialog.getText(self, "Get Last Name","Employee Last Name", QLineEdit.Normal, "")
+        if okPressed and last != "":
+            return last
+        return None
+    
+    def getFirst(self):
+        first, okPressed = QInputDialog.getText(self, "Get First Name","Employee First Name", QLineEdit.Normal, "")
+        if okPressed and first != "":
+            return first
+        return None
     
     """
     Hire user specified employee
     """
     def hire_triggered(self):
-        uid = self.getUID()
+        uid = None
+        dictall = viewall()
+        inputTypeBox = QMessageBox()
+        inputTypeBox.setText("Add user by ID or Name")
+        inputTypeBox.setWindowIcon(QtGui.QIcon(icon))
+        inputTypeBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        buttonid = inputTypeBox.button(QMessageBox.Yes)
+        buttonname = inputTypeBox.button(QMessageBox.No)
+        buttonid.setText("ID")
+        buttonname.setText("Name")
+        input = inputTypeBox.exec_()
+        if input == QMessageBox.Yes:
+            uid = self.getUID()
+            while uid not in dictall and uid:
+                errdlg = QErrorMessage()
+                errdlg.setWindowTitle("ERROR")
+                errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been added")
+                errdlg.exec_()
+                uid = self.getUID() 
+        elif input == QMessageBox.No:
+            last = self.getLast()
+            if last:
+                first = self.getFirst()
+                if first:
+                    for value in dictall.values():
+                        if value["last"] == last.upper():
+                            if value["first"] == first.upper():
+                                uid = value["id"]
+            if not uid:
+                errdlg = QErrorMessage()
+                errdlg.setWindowTitle("ERROR")
+                errdlg.showMessage("ERROR: INVALID EMPLOYEE NAME---Please ensure the name is correct and that the employee has been added")
+                errdlg.exec_()
         if uid:
-            while uid not in unrankedids and uid:
+            if uid not in unrankedids and uid:
                 errdlg = QErrorMessage()
                 errdlg.setWindowTitle("ERROR")
                 errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been signed up")
                 errdlg.exec_()
-                uid = self.getUID()
-            desc = self.getDesc()
-            if desc:
-                msgBox = QMessageBox()
-                msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + "\nDescription:    " + desc)
-                msgBox.setWindowIcon(QtGui.QIcon(icon))
-                msgBox.setWindowTitle("Confirmation")
-                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                confirm = msgBox.exec_()
-                if confirm == QMessageBox.Ok:
-                    for i in unranked:
-                        if i[0] == uid:
-                            unranked.remove(i)
-                            unrankedids.remove(uid)
-                    confirmovertime(uid, desc)
+            else:
+                desc = self.getDesc()
+                if desc:
+                    msgBox = QMessageBox()
+                    msgBox.setText("Confirm Employee Information Is Correct\n____________________________________________\n\nEmployee ID:    " + uid + "\nDescription:    " + desc)
+                    msgBox.setWindowIcon(QtGui.QIcon(icon))
+                    msgBox.setWindowTitle("Confirmation")
+                    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    confirm = msgBox.exec_()
+                    if confirm == QMessageBox.Ok:
+                        for i in unranked:
+                            if i[0] == uid:
+                                unranked.remove(i)
+                                unrankedids.remove(uid)
+                        confirmovertime(uid, desc)
         self.table_widget.read_list()
         home.table_widget.open_sheet()
         signup.table_widget.read_list()
@@ -610,6 +664,18 @@ class SignUp(QMainWindow):
             return uid
         return None
     
+    def getLast(self):
+        last, okPressed = QInputDialog.getText(self, "Get Last Name","Employee Last Name", QLineEdit.Normal, "")
+        if okPressed and last != "":
+            return last
+        return None
+    
+    def getFirst(self):
+        first, okPressed = QInputDialog.getText(self, "Get First Name","Employee First Name", QLineEdit.Normal, "")
+        if okPressed and first != "":
+            return first
+        return None
+    
     def getEightBlock(self):
         eightblocks = ("0-8", "8-16", "16-24")
         eightblock, okPressed = QInputDialog.getItem(self, "Get Eight Hour Block", "Eight Hour Block", eightblocks, 0, False)
@@ -635,14 +701,39 @@ class SignUp(QMainWindow):
     Add user to list and update table_widget table
     """
     def add_triggered(self):
-        uid = self.getUID()
+        uid = None
         dictall = viewall()
-        while uid not in dictall and uid:
-            errdlg = QErrorMessage()
-            errdlg.setWindowTitle("ERROR")
-            errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been added")
-            errdlg.exec_()
+        inputTypeBox = QMessageBox()
+        inputTypeBox.setText("Add user by ID or Name")
+        inputTypeBox.setWindowIcon(QtGui.QIcon(icon))
+        inputTypeBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        buttonid = inputTypeBox.button(QMessageBox.Yes)
+        buttonname = inputTypeBox.button(QMessageBox.No)
+        buttonid.setText("ID")
+        buttonname.setText("Name")
+        input = inputTypeBox.exec_()
+        if input == QMessageBox.Yes:
             uid = self.getUID()
+            while uid not in dictall and uid:
+                errdlg = QErrorMessage()
+                errdlg.setWindowTitle("ERROR")
+                errdlg.showMessage("ERROR: INVALID EMPLOYEE ID---Please ensure the employee ID is correct and that the employee has been added")
+                errdlg.exec_()
+                uid = self.getUID() 
+        elif input == QMessageBox.No:
+            last = self.getLast()
+            if last:
+                first = self.getFirst()
+                if first:
+                    for value in dictall.values():
+                        if value["last"] == last.upper():
+                            if value["first"] == first.upper():
+                                uid = value["id"]
+            if not uid:
+                errdlg = QErrorMessage()
+                errdlg.setWindowTitle("ERROR")
+                errdlg.showMessage("ERROR: INVALID EMPLOYEE NAME---Please ensure the name is correct and that the employee has been added")
+                errdlg.exec_()
         if uid:
             eightblock = self.getEightBlock()
             if eightblock:
