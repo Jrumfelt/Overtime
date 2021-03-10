@@ -14,6 +14,7 @@ from PyQt5 import QtGui
 import shutil
 from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
+import webbrowser
 
 fname = "Files/Names.csv"
 editfname = "Files/EditLog.txt"
@@ -821,6 +822,7 @@ class HomeWindow(QMainWindow):
         quit_action = QAction("Quit", self)
         reset_action = QAction("Reset", self)
         view_action = QAction("View Logs", self)
+        help_action = QAction("Help", self)
         
         #Add menu buttons to menu bar
         bar.addAction(rank_action)
@@ -828,6 +830,7 @@ class HomeWindow(QMainWindow):
         bar.addAction(reset_action)
         bar.addAction(view_action)
         bar.addAction(newemp_action)
+        bar.addAction(help_action)
         bar.addAction(quit_action)
         
         
@@ -838,6 +841,7 @@ class HomeWindow(QMainWindow):
         edit_action.triggered.connect(self.edit_triggered)
         reset_action.triggered.connect(self.reset_triggered)
         view_action.triggered.connect(self.view_triggered)
+        help_action.triggered.connect(self.help_triggered)
         
         #set up table
         self.table_widget = EmployeeTable(10, 10)
@@ -862,6 +866,12 @@ class HomeWindow(QMainWindow):
     """
     def quit_trigger(self):
         qApp.quit()
+        
+    """
+    Open Github demo page
+    """
+    def help_triggered(self):
+        webbrowser.open("https://github.com/Jrumfelt/Overtime#demo")
     
     """
     Show signup page
