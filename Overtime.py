@@ -15,6 +15,7 @@ import shutil
 from PyQt5.QtCore import Qt
 from tempfile import NamedTemporaryFile
 import webbrowser
+import random
 
 fname = "Files/Names.csv"
 editfname = "Files/EditLog.txt"
@@ -898,7 +899,10 @@ class HomeWindow(QMainWindow):
     On user confirmation that the information is correct add to Names.csv using newemployee() function
     """
     def newemp_triggered(self):
-        uid = self.getUID()
+        uid = str(random.randint(0, 9999))
+        all = viewall()
+        while uid in all:
+            uid = str(random.randint(0,9999))
         if uid:
             lastname = self.getLast()
             if lastname:
@@ -916,19 +920,12 @@ class HomeWindow(QMainWindow):
                             
                         confirm = msgBox.exec_()
                         if confirm == QMessageBox.Ok:
-                            all = viewall()
-                            if uid not in all:
-                                newemployee(uid, lastname, firstname, position)
-                                now = datetime.now()
-                                nowstr = now.strftime("%m/%d/%Y %H:%M:%S")
-                                desc = "New employee added: " + uid + ", " + lastname + ", " + firstname + ", " + position
-                                with open(editfname, "a", newline="") as f:
-                                    f.write(nowstr + " " + desc + "\n\n")
-                            else:
-                                errdlg = QErrorMessage()
-                                errdlg.setWindowTitle("ERROR")
-                                errdlg.showMessage("ERROR: USER WITH ID: " + uid + " HAS ALREADY BEEN SIGNED UP")
-                                errdlg.exec_()
+                            newemployee(uid, lastname, firstname, position)
+                            now = datetime.now()
+                            nowstr = now.strftime("%m/%d/%Y %H:%M:%S")
+                            desc = "New employee added: " + uid + ", " + lastname + ", " + firstname + ", " + position
+                            with open(editfname, "a", newline="") as f:
+                                f.write(nowstr + " " + desc + "\n\n")
         self.table_widget.open_sheet()
         
     """
