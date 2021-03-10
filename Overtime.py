@@ -728,8 +728,8 @@ class SignUp(QMainWindow):
                 first = self.getFirst()
                 if first:
                     for value in dictall.values():
-                        if value["last"] == last.upper():
-                            if value["first"] == first.upper():
+                        if value["last"].lower() == last.lower():
+                            if value["first"].lower() == first.lower():
                                 uid = value["id"]
             if not uid:
                 errdlg = QErrorMessage()
