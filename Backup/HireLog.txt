@@ -1,0 +1,16 @@
+9, Doe, John : 01/1/21 Change hire to fit having multiple of the same id employees
+
+10, Lake, Meghan : 9/8/19 ISB 
+
+1, Carter, Kevin : 2/23/20 PTL
+
+1, Carter, Kevin : Put back in list
+
+1, Carter, Kevin : 2/24/21 Hired
+
+3, Garcia, Marilyn : 2/24 isb sgt 
+
+4, Hansen, Chris : Hired 2/25/21 For Evening shift 
+
+12, Bryan, Franklin : Hired 2/25/21 for second half of evening shift
+

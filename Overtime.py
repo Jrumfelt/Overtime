@@ -20,6 +20,9 @@ import random
 fname = "Files/Names.csv"
 editfname = "Files/EditLog.txt"
 logfname = "Files/HireLog.txt"
+bkname = "Backup/Names.csv"
+bkedit = "Backup/EditLog.txt"
+bklog = "Backup/HireLog.txt"
 icon = "Images/Icon.jpg"
 fields = ["id", "last","first","job","hired","hiredesc","previousposition"]
 jobs = ["FSB PTL", "ISB DET", "ASB PTL", "FSB SGT", "ISB SGT", "ASB SGT", "FSB LT", "ISB LT", "ASB LT"]
@@ -132,6 +135,11 @@ def resetrank():
             row["hired"], row["hiredesc"], row["previousposition"] = "","",""
             writer.writerow(row)    
     shutil.move(tempfile.name, fname)
+    #Backup files by copying them to backup dir
+    shutil.copyfile(fname, bkname)
+    shutil.copyfile(editfname, bkedit)
+    shutil.copyfile(logfname, bklog)
+    
     
         
 """
