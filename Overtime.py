@@ -25,7 +25,7 @@ bkedit = "Backup/EditLog.txt"
 bklog = "Backup/HireLog.txt"
 icon = "Images/Icon.jpg"
 fields = ["id", "last","first","job","hired","hiredesc","previousposition"]
-jobs = ["FSB PTL", "ISB DET", "ASB PTL", "FSB SGT", "ISB SGT", "ASB SGT", "FSB LT", "ISB LT", "ASB LT"]
+jobs = ["FSB PTL", "ISB DET", "ASB PTL", "FSB SGT", "Non-FSB SGT", "FSB LT", "Non-FSB LT"]
 unranked = []
 unrankedids = []
 
