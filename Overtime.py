@@ -372,44 +372,6 @@ class EditFile(QWidget):
         self.resize(1100, 600)
         
         self.UiComponents()
-        """
-        #Create Menu Bar
-        bar = self.menuBar()
-        
-        #Create Actions
-        up_action = QAction("Move Up", self)
-        down_action = QAction("Move Down", self)
-        delete_action = QAction("Delete Row", self)
-        submit_action = QAction("Submit Edit", self)
-        close_action = QAction("Close", self)
-        
-        #Add actions to bar
-        bar.addAction(up_action)
-        bar.addAction(down_action)
-        bar.addAction(delete_action)
-        bar.addAction(submit_action)
-        bar.addAction(close_action)
-        
-        #Connect actions to functions
-        up_action.triggered.connect(self.up_triggered)
-        down_action.triggered.connect(self.down_triggered)
-        delete_action.triggered.connect(self.delete_triggered)
-        submit_action.triggered.connect(self.submit_triggered)
-        close_action.triggered.connect(self.close_triggered)
-        
-        #Set up table
-        self.table_widget = EmployeeTable(10, 10)
-        self.setCentralWidget(self.table_widget)
-        
-        headers = ["ID", "Last", "First", "Job", "Hired", "Hired Description", "Previous Position"]
-        
-        self.table_widget.setAlternatingRowColors(True)
-        self.table_widget.setHorizontalHeaderLabels(headers)
-        self.table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table_widget.setSelectionMode(QAbstractItemView.SingleSelection)
-        
-        self.table_widget.open_sheet()
-        """
 
     def UiComponents(self):
         #Table Widget
@@ -467,7 +429,6 @@ class EditFile(QWidget):
         self.submit.clicked.connect(self.submit_triggered)
         self.delete.clicked.connect(self.delete_triggered)
         
-
     """
     Move Selected Row Up
     """
