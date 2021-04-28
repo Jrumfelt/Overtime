@@ -369,7 +369,7 @@ class EditFile(QWidget):
         
         self.setWindowTitle("Overtime Ranks") 
         self.setWindowIcon(QtGui.QIcon(icon))
-        self.resize(1005, 600)
+        self.resize(1100, 600)
         
         self.UiComponents()
         """
